@@ -91,6 +91,8 @@ def explore_work(conn, budget, work_id: str, max_rounds: int = 2) -> Dict[str, i
     done = [q for q in rq if q["state"] == "done"]
     failed = [q for q in rq if q["state"] in ("failed", "skipped")]
     checked = sorted({q["kind"].replace("gap_", "") for q in done})
+    amb = conn.execute("SELECT count(*) FROM review_queue WHERE kind='title_match' AND ref_table='work' AND ref_id=? AND state='open'", (work_id,)).fetchone()[0]
+    amb_note = f" 동명 후보 {amb}건 검수 대기(같은 작품으로 확정하지 않음)." if amb else ""
     unreachable = "; ".join(f"{k}: {v}" for k, v in UNREACHABLE.items())
     for f in REQUIRED:
         gid = stable_id("gap", work_id, f)
@@ -116,7 +118,7 @@ def explore_work(conn, budget, work_id: str, max_rounds: int = 2) -> Dict[str, i
         elif _text_doc_without_field(conn, work_id):
             new, detail = "not_extracted", f"본문이 있는 문서에서 규칙 추출기가 {f} 를 못 찾음(추출기 한계 가능). 역검색: {','.join(checked) or '없음'}"
         elif done:
-            new, detail = "not_in_source", f"읽을 수 있는 출처에 없음. 확인: {','.join(checked)}. 접근 불가: {unreachable}"
+            new, detail = "not_in_source", f"읽을 수 있는 출처에 없음. 확인: {','.join(checked)}. 접근 불가: {unreachable}.{amb_note}"
         else:
             new, detail = "inaccessible", f"역검색 질의 모두 실패/건너뜀({len(failed)}건). 접근 불가: {unreachable}"
         if set_state(conn, gid, new, detail):

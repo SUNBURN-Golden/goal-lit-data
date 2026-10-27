@@ -92,8 +92,11 @@ def find_work(conn, title: str, authors: List[str], isbns: List[str]) -> Tuple[O
     for wid in cands:
         known = {norm(r["canonical_name"]) for r in conn.execute(
             "SELECT a.canonical_name FROM work_author wa JOIN author a USING(author_id) WHERE wa.work_id=? AND wa.recorded_to IS NULL", (wid,))}
-        if not known or not authors or known & {norm(a) for a in authors}:
-            return wid, "title" + ("+author" if known and authors else "")
+        if known and authors and known & {norm(a) for a in authors}:
+            return wid, "title+author"
+    if cands:
+        # 제목만 같고 저자를 어느 한쪽이라도 모르거나 서로 다르면 같은 작품이라고 단정하지 않는다(유사도 합치기 없음): 검수 대기
+        return None, "ambiguous:" + cands[0]
     return None, ""
 
 
@@ -187,6 +190,13 @@ def promote_book(conn, grp, sid: str, url: str, doc_id: str, now: str, pol, stat
     isbns = _vals(grp, "isbn")
     work_id, how = find_work(conn, title, authors, isbns)
     cand_id = stable_id("cand", norm(title), norm(authors[0]) if authors else "")
+    if work_id is None and how.startswith("ambiguous:"):
+        wid0 = how.split(":", 1)[1]
+        conn.execute("INSERT OR IGNORE INTO work_candidate(cand_id,title,author_name,first_year,isbn,publisher,origin,doc_id,state,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                     (cand_id, title, authors[0] if authors else "", (_vals(grp, "pub_year") or [""])[0], isbns[0] if isbns else "", (_vals(grp, "publisher") or [""])[0], pol["registry_key"], doc_id, "new", now))
+        enqueue_review(conn, "title_match", "work", wid0, f"동명 후보 '{title}' / 저자 {authors[:2] or '미상'} / 출처 {pol['registry_key']} — 같은 작품인지 사람이 확인(자동 합치지 않음)", 40)
+        stats["ambiguous_title"] = stats.get("ambiguous_title", 0) + 1
+        return None
     year = (_vals(grp, "pub_year") or [""])[0]
     publisher = (_vals(grp, "publisher") or [""])[0]
     is_new = False
