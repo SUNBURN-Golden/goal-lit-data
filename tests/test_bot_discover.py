@@ -218,3 +218,29 @@ def test_budget_counts_legacy_collector_usage_from_inbox_counter(env, tmp_path, 
     assert b.available("backfill") == 120                      # 클래스 한도 안
     b.take("backfill", 100)
     assert b.available("backfill") == 20 and b.available("discovery") == 200 - 71 - 100     # 클래스 한도 안이어도 하루 합계 200 이 먼저 막는다
+
+
+def test_db_write_lock_is_not_held_during_network(env):
+    """데몬 13개가 한 DB를 쓰므로, 요청이 나가는 동안 다른 연결이 쓸 수 있어야 한다."""
+    import sqlite3
+    kg, reg, tr, mk, tmp = env
+    seen = {}
+
+    def during(url):
+        other = sqlite3.connect(str(tmp / "kg.db"), timeout=0.2)
+        try:
+            other.execute("BEGIN IMMEDIATE")
+            other.execute("INSERT INTO _migrations(version,name,applied_at) VALUES(9999,'probe','x')")
+            other.rollback()
+            seen["free"] = True
+        except sqlite3.OperationalError as e:
+            seen["free"] = False
+            seen["err"] = str(e)
+        finally:
+            other.close()
+        return (200, "text/html", PAPER_HTML, url)
+    tr.routes["https://journal.test/p"] = during
+    from glkg.bot.collect import collect
+    ex = mk()
+    collect(kg, ex, "https://journal.test/p", "discovery", trial=True)
+    assert seen.get("free") is True, seen

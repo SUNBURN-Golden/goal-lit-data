@@ -8,9 +8,8 @@ from . import parser
 
 def collect(conn, ex: FetchExecutor, url: str, budget_class: str, origin: str = "", trial: bool = False, hint_work_id: Optional[str] = None, on_done=None):
     """(FetchResult, parse_stats|None)"""
-    if not conn.in_transaction:
-        conn.execute("BEGIN")
-    conn.execute("SAVEPOINT collect")
+    if conn.in_transaction:
+        conn.commit()      # 깨끗한 상태에서 시작. 예산 차감은 네트워크 직전에 커밋되고(요청은 실제로 나갔으므로), 저장·파싱·작업상태는 끝에서 한 번에 커밋된다
     try:
         res = ex.fetch(url, budget_class, origin=origin, trial=trial)
         stats = None
@@ -23,16 +22,11 @@ def collect(conn, ex: FetchExecutor, url: str, budget_class: str, origin: str = 
                 stats = parser.parse_document(conn, res.doc_id, res.content, res.kind, url, res.ctype, ex.reg, hint_work_id)
         if on_done:
             on_done(conn, res, stats)   # 작업 상태 갱신·후속 질의 생성도 같은 트랜잭션 → 죽어도 '가져왔는데 작업이 안 끝남' 상태가 남지 않는다
-        conn.execute("RELEASE collect")
         conn.commit()
         return res, stats
     except BudgetExhausted:
-        conn.execute("ROLLBACK TO collect")
-        conn.execute("RELEASE collect")
-        conn.commit()
+        conn.rollback()
         raise
     except Exception:
-        conn.execute("ROLLBACK TO collect")
-        conn.execute("RELEASE collect")
-        conn.commit()
+        conn.rollback()
         raise

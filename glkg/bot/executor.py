@@ -77,6 +77,8 @@ class FetchExecutor:
         self.reg = registry or Registry()
         self.transport = transport or H.RequestsTransport()
         self.clock = clock or H.DomainClock()
+        if getattr(self.clock, "before_wait", None) is None:
+            self.clock.before_wait = self.conn.commit   # 대기·네트워크 중에는 쓰기 잠금을 놓는다(데몬 13개가 한 DB를 쓴다)
         self.budget = budget or Budget(conn)
         self.raw_dir = Path(raw_dir or RAW_DIR)
         self.renderer = renderer  # 선택: 동적 페이지용. 없으면 'needs_browser' 실패로 기록

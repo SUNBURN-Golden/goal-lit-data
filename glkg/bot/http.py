@@ -70,13 +70,16 @@ def host_of(url: str) -> str:
 class DomainClock:
     """도메인별 동시 1건 + 최소 간격. 프로세스가 달라도 파일 락으로 지킨다."""
 
-    def __init__(self, lock_dir: Optional[Path] = None, interval: Optional[float] = None, sleep=time.sleep, now=time.time):
+    def __init__(self, lock_dir: Optional[Path] = None, interval: Optional[float] = None, sleep=time.sleep, now=time.time, before_wait=None):
+        self.before_wait = before_wait   # 간격 대기·네트워크 직전에 호출: DB 쓰기 잠금을 쥔 채 잠들지 않도록 커밋한다
         self.dir = Path(lock_dir or config.LOCK_DIR) / "domains"
         self.interval = config.MIN_DOMAIN_INTERVAL_SEC if interval is None else interval
         self.sleep, self.now = sleep, now
         self.per_domain: Dict[str, float] = {}   # robots Crawl-delay 로 늘어난 간격
 
     def acquire(self, domain: str):
+        if self.before_wait:
+            self.before_wait()
         self.dir.mkdir(parents=True, exist_ok=True)
         f = open(self.dir / (re.sub(r"[^a-z0-9.-]", "_", domain) + ".lock"), "a+")
         fcntl.flock(f, fcntl.LOCK_EX)
