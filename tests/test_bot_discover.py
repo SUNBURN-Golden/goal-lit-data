@@ -244,3 +244,19 @@ def test_db_write_lock_is_not_held_during_network(env):
     ex = mk()
     collect(kg, ex, "https://journal.test/p", "discovery", trial=True)
     assert seen.get("free") is True, seen
+
+
+def test_unreadable_robots_is_transient_not_a_permanent_block(env):
+    kg, reg, tr, mk, tmp = env
+    tr.routes["https://journal.test/robots.txt"] = ConnectionError("ssl")
+    tr.routes["https://journal.test/p"] = (200, "text/html", PAPER_HTML)
+    ex = mk()
+    res = ex.fetch("https://journal.test/p", "discovery", trial=True)
+    assert res.outcome == "failed_network" and res.detail.startswith("robots_unreadable")   # 수집은 하지 않지만
+    assert "https://journal.test/p" not in tr.calls                                            # 본문 요청은 나가지 않았고
+    from glkg.bot.jobs import PERMANENT
+    assert res.outcome not in PERMANENT                                                        # 영구 제외도 아니다(백오프 재시도 대상)
+    # 평가기: 즉시 blocked 로 굳히지 않고 3회까지 재시도
+    kg.execute("INSERT INTO candidate_source(domain,state,first_seen_via,sample_url,first_seen_at) VALUES('journal.test','new','t','https://journal.test/p','x')")
+    row = kg.execute("SELECT * FROM candidate_source WHERE domain='journal.test'").fetchone()
+    assert EV.evaluate_outcome(kg, row, res) == "new"

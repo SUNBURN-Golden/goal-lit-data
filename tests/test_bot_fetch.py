@@ -40,9 +40,14 @@ def test_robots_ai_block_and_all_block_are_not_fetched(env):
 def test_robots_unreadable_means_no_collection(env):
     kg, reg, tr, mk, _ = env
     tr.routes["https://ok-news.test/robots.txt"] = (503, "text/plain", "x")
-    assert mk().fetch("https://ok-news.test/a/1", "discovery").outcome == "failed_robots"
+    r1 = mk().fetch("https://ok-news.test/a/1", "discovery")           # 5xx·연결 실패 = 일시 장애: 수집 안 함 + 백오프 재시도 대상
+    assert r1.outcome == "failed_network" and r1.detail.startswith("robots_status_5")
     tr.routes["https://ok-news.test/robots.txt"] = ConnectionError("down")
-    assert mk().fetch("https://ok-news.test/a/2", "discovery").outcome == "failed_robots"
+    r2 = mk().fetch("https://ok-news.test/a/2", "discovery")
+    assert r2.outcome == "failed_network" and r2.detail.startswith("robots_unreadable")
+    assert not any(c.endswith("/a/1") or c.endswith("/a/2") for c in tr.calls)   # 본문은 한 번도 요청하지 않음
+    tr.routes["https://ok-news.test/robots.txt"] = (403, "text/plain", "x")      # 403 = 접근 거부: 영구 제외
+    assert mk().fetch("https://ok-news.test/a/3", "discovery").outcome == "failed_robots"
 
 
 def test_blocked_hosts_and_unknown_hosts_policy(env):

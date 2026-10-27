@@ -171,6 +171,9 @@ class RobotsGate:
             entry = (self.now(), rp, "ok")
         else:
             entry = (self.now(), None, f"robots_status_{r.status}")  # 401/403/5xx: 안전하게 수집 안 함
+        if entry[1] is None and (entry[2].startswith("robots_unreadable") or re.fullmatch(r"robots_status_5\d\d", entry[2])):
+            # 일시 장애(타임아웃·SSL·5xx): 수집은 안 하되 24시간 동안 '막힘'으로 굳히지 않고 10분 뒤 다시 확인한다
+            entry = (self.now() - self.ttl + min(self.ttl, 600), entry[1], entry[2])
         self.cache[host] = entry
         return entry
 
