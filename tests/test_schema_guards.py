@@ -32,7 +32,7 @@ def _fact(c, fid, status="source_claim", src="src_ext", ev="ev1", value="v"):
 def test_migrations_apply_once(tmp_path):
     c = db.connect(tmp_path / "x.db")
     first = db.migrate(c)
-    assert first == [1, 2, 3, 4, 5, 6]
+    assert first == [1, 2, 3, 4, 5, 6, 7]
     assert db.migrate(c) == []
 
 

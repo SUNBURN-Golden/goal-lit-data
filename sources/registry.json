@@ -45,29 +45,20 @@
   },
   {
    "key": "wikidata_api",
-   "name": "Wikidata 공개 API·SPARQL (작품·판본 서지, CC0)",
+   "name": "Wikidata (API·SPARQL)",
    "kind": "api",
-   "support_level": "supported",
+   "support_level": "unsupported",
    "domains": [
     "www.wikidata.org",
     "wikidata.org",
     "query.wikidata.org"
    ],
-   "access_method": "공식 공개 API·SPARQL 엔드포인트 (키 불필요, 정직한 UA, robots 확인)",
-   "collectable_fields": [
-    "작품 제목",
-    "원제",
-    "저자",
-    "발행일",
-    "출판사",
-    "ISBN",
-    "번역자",
-    "원어"
-   ],
-   "usage_basis": "metadata_only",
+   "access_method": "수집 안 함. robots.txt 가 www.wikidata.org/w/ 와 query.wikidata.org/sparql 을 일반 봇에 불허하므로 우회하지 않는다",
+   "collectable_fields": [],
+   "usage_basis": "link_only",
    "refresh_hours": 168,
-   "retention_days": 365,
-   "unsupported_scope": "대량 덤프 수집, 편집(쓰기)",
+   "retention_days": 0,
+   "unsupported_scope": "API·SPARQL 자동 수집 전부(robots 불허)",
    "default_access_level": "book_intro"
   },
   {
@@ -91,6 +82,48 @@
    "retention_days": 365,
    "unsupported_scope": "논문 전문, 초록 문장 복사",
    "default_access_level": "paper_abstract"
+  },
+  {
+   "key": "google_books_api",
+   "name": "Google Books API",
+   "kind": "api",
+   "support_level": "unsupported",
+   "domains": [
+    "www.googleapis.com",
+    "books.google.com"
+   ],
+   "access_method": "키 없는 호출은 일일 한도 0(429)이라 사용 불가. API 키 발급은 계정 연결이므로 준태님 승인 후에만",
+   "collectable_fields": [],
+   "usage_basis": "link_only",
+   "refresh_hours": 168,
+   "retention_days": 0,
+   "unsupported_scope": "키 없이는 전부",
+   "default_access_level": "paper_abstract",
+   "credential_status": "API 키 미구성(발급은 승인 필요)"
+  },
+  {
+   "key": "openlibrary_api",
+   "name": "Open Library 공개 JSON (주제 목록·작품 판본)",
+   "kind": "api",
+   "support_level": "supported",
+   "domains": [
+    "openlibrary.org"
+   ],
+   "access_method": "robots 허용 경로만: /subjects/*.json, /works/*/editions.json, /authors/*/works.json. /search*·/api* 는 robots 불허라 쓰지 않는다. 정직한 UA, 호스트 간격 ≥ robots Crawl-delay",
+   "collectable_fields": [
+    "작품명",
+    "저자명",
+    "최초 발행연도",
+    "판본 ISBN",
+    "판본 출판사·발행연도",
+    "언어",
+    "원제(번역서)"
+   ],
+   "usage_basis": "metadata_only",
+   "refresh_hours": 168,
+   "retention_days": 365,
+   "unsupported_scope": "/search·/api 경로, 대량 덤프, 편집(쓰기), 영문 제목 번역서를 한글 작품과 제목 유사도로 합치는 것",
+   "default_access_level": "book_intro"
   },
   {
    "key": "doi_resolver",

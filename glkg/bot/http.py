@@ -74,6 +74,7 @@ class DomainClock:
         self.dir = Path(lock_dir or config.LOCK_DIR) / "domains"
         self.interval = config.MIN_DOMAIN_INTERVAL_SEC if interval is None else interval
         self.sleep, self.now = sleep, now
+        self.per_domain: Dict[str, float] = {}   # robots Crawl-delay 로 늘어난 간격
 
     def acquire(self, domain: str):
         self.dir.mkdir(parents=True, exist_ok=True)
@@ -84,7 +85,7 @@ class DomainClock:
             last = float(f.read().strip() or 0)
         except ValueError:
             last = 0.0
-        wait = self.interval - (self.now() - last)
+        wait = max(self.interval, self.per_domain.get(domain, 0)) - (self.now() - last)
         if wait > 0:
             self.sleep(wait)
         return f
@@ -98,6 +99,32 @@ class DomainClock:
         f.close()
 
 
+def crawl_delay_for(robots_text: str, ua_name: str = "goallitbot") -> float:
+    """우리 UA에 해당하는 그룹('*' 또는 '*bot' 같은 와일드카드 포함)의 Crawl-delay 중 최댓값(초)."""
+    import fnmatch
+    agents, best, in_rules = [], 0.0, False
+    for line in robots_text.splitlines():
+        line = line.split("#", 1)[0].strip()
+        if ":" not in line:
+            continue
+        k, v = [x.strip() for x in line.split(":", 1)]
+        k = k.lower()
+        if k == "user-agent":
+            if in_rules:
+                agents, in_rules = [], False
+            agents.append(v.lower())
+        else:
+            in_rules = True
+            if k == "crawl-delay":
+                try:
+                    d = float(v)
+                except ValueError:
+                    continue
+                if any(a == "*" or fnmatch.fnmatch(ua_name, a) for a in agents):
+                    best = max(best, d)
+    return best
+
+
 class RobotsGate:
     """(허용 여부, 사유). robots 응답 캐시는 호스트당 24시간."""
 
@@ -106,6 +133,7 @@ class RobotsGate:
         self.charge = charge  # robots.txt 요청도 일일 예산에서 센다 (callable -> bool)
         self.cache: Dict[str, Tuple[float, Optional[urllib.robotparser.RobotFileParser], str]] = {}
         self.requests_made = 0
+        self.sitemaps: Dict[str, list] = {}
 
     def _load(self, scheme: str, host: str):
         hit = self.cache.get(host)
@@ -131,7 +159,12 @@ class RobotsGate:
             entry = (self.now(), rp, "no_robots")
         elif r.status == 200:
             rp = urllib.robotparser.RobotFileParser()
-            rp.parse(r.content.decode("utf-8", "replace").splitlines())
+            text = r.content.decode("utf-8", "replace")
+            rp.parse(text.splitlines())
+            self.sitemaps[host] = list(rp.site_maps() or [])
+            d = crawl_delay_for(text)
+            if d:
+                self.clock.per_domain[host] = max(d, self.clock.interval)
             entry = (self.now(), rp, "ok")
         else:
             entry = (self.now(), None, f"robots_status_{r.status}")  # 401/403/5xx: 안전하게 수집 안 함

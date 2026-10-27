@@ -85,59 +85,57 @@ def openalex(doc: Dict[str, Any]) -> List[Field]:
     return out
 
 
-# ---------- Wikidata ----------
-def wikidata_sparql(doc: Dict[str, Any]) -> List[Field]:
-    """SPARQL 결과: 열 이름 work, workLabel, authorLabel, pub, publisherLabel, isbn, origLabel, translatorLabel (있는 것만)."""
+# ---------- Open Library (robots 허용 경로만: /subjects/*.json, /works/*/editions.json) ----------
+HANGUL = re.compile(r"[가-힣]")
+
+
+def _ol_year(s: Any) -> str:
+    m = re.search(r"(1[5-9]\d\d|20\d\d)", str(s or ""))
+    return m.group(1) if m else ""
+
+
+def ol_subject(doc: Dict[str, Any]) -> List[Field]:
+    """주제 목록: 한글 제목 작품만 후보로 삼는다(영문 제목 번역서는 원제 근거가 없어 같은 작품으로 합치지 않는다)."""
     out: List[Field] = []
-    rows = (doc.get("results") or {}).get("bindings") or []
-    for i, b in enumerate(rows):
-        loc = f"bindings[{i}]"
-        g = lambda k: (b.get(k) or {}).get("value", "")
+    skipped = 0
+    for i, w in enumerate(doc.get("works") or []):
+        loc = f"works[{i}]"
+        title = w.get("title") or ""
+        if not HANGUL.search(title):
+            skipped += 1
+            continue
         _add(out, "doc_kind", "book_record", loc)
-        _add(out, "wikidata_id", g("work").rsplit("/", 1)[-1], f"{loc}.work")
-        _add(out, "title", g("workLabel"), f"{loc}.workLabel")
-        _add(out, "author", g("authorLabel"), f"{loc}.authorLabel")
-        pub = g("pub")
-        if pub:
-            _add(out, "pub_year", pub[:4], f"{loc}.pub")
-        _add(out, "publisher", g("publisherLabel"), f"{loc}.publisherLabel")
-        isb = isbn_ok(g("isbn")) if g("isbn") else ""
-        _add(out, "isbn", isb, f"{loc}.isbn")
-        _add(out, "original_title", g("origTitle"), f"{loc}.origTitle")
-        _add(out, "translator", g("translatorLabel"), f"{loc}.translatorLabel")
+        _add(out, "title", title, f"{loc}.title")
+        _add(out, "ol_work_key", w.get("key"), f"{loc}.key")
+        _add(out, "pub_year", _ol_year(w.get("first_publish_year")), f"{loc}.first_publish_year")
+        for a in (w.get("authors") or [])[:4]:
+            _add(out, "author", a.get("name"), f"{loc}.authors")
+            _add(out, "ol_author_key", a.get("key"), f"{loc}.authors")
+    _add(out, "skipped_non_korean_title", skipped, "$", "pattern")
+    _add(out, "total_in_subject", doc.get("work_count"), "$.work_count")
     return out
 
 
-def wikidata_entities(doc: Dict[str, Any]) -> List[Field]:
-    """wbgetentities 응답에서 작품 항목의 원제(P1476)·저자(P50)·발행일(P577)·번역자(P655)·ISBN(P212/P957)."""
+def ol_editions(doc: Dict[str, Any]) -> List[Field]:
+    """한 작품의 판본 목록. 한국어 판본(languages=kor 또는 한글 제목)만 필수 필드 근거가 되고, 나머지는 번역판 표시로 남긴다."""
     out: List[Field] = []
-    for qid, e in (doc.get("entities") or {}).items():
-        loc = f"entities.{qid}"
-        cl = e.get("claims") or {}
-
-        def vals(p):
-            r = []
-            for c in cl.get(p, []):
-                dv = ((c.get("mainsnak") or {}).get("datavalue") or {}).get("value")
-                if dv is not None:
-                    r.append(dv)
-            return r
-        _add(out, "doc_kind", "book_record", loc)
-        _add(out, "wikidata_id", qid, loc)
-        for lang in ("ko", "en"):
-            lab = (e.get("labels") or {}).get(lang, {}).get("value")
-            _add(out, f"label_{lang}", lab, f"{loc}.labels.{lang}")
-        for dv in vals("P1476"):
-            _add(out, "original_title", dv.get("text") if isinstance(dv, dict) else dv, f"{loc}.claims.P1476")
-        for dv in vals("P577"):
-            t = dv.get("time", "") if isinstance(dv, dict) else ""
-            _add(out, "pub_year", t[1:5] if t.startswith(("+", "-")) else t[:4], f"{loc}.claims.P577")
-        for dv in vals("P212") + vals("P957"):
-            _add(out, "isbn", isbn_ok(str(dv)), f"{loc}.claims.P212")
-        for p, f in (("P50", "author_qid"), ("P655", "translator_qid"), ("P123", "publisher_qid")):
-            for dv in vals(p):
-                if isinstance(dv, dict):
-                    _add(out, f, dv.get("id"), f"{loc}.claims.{p}")
+    for i, e in enumerate(doc.get("entries") or []):
+        loc = f"entries[{i}]"
+        langs = [(x.get("key") or "").rsplit("/", 1)[-1] for x in (e.get("languages") or [])]
+        korean = "kor" in langs or bool(HANGUL.search(e.get("title") or ""))
+        _add(out, "doc_kind", "edition_record", loc)
+        _add(out, "edition_lang", "kor" if korean else (langs[0] if langs else "und"), f"{loc}.languages")
+        _add(out, "title", e.get("title"), f"{loc}.title")
+        for k in (e.get("isbn_13") or [])[:2] + (e.get("isbn_10") or [])[:1]:
+            _add(out, "isbn", isbn_ok(str(k)), f"{loc}.isbn")
+        pubs = [p for p in (e.get("publishers") or []) if p and p.strip().lower() not in ("unknown", "n/a", "s.n.")]
+        _add(out, "publisher", pubs[0] if pubs else "", f"{loc}.publishers")
+        _add(out, "pub_year", _ol_year(e.get("publish_date")), f"{loc}.publish_date")
+        if korean and e.get("translated_from"):
+            _add(out, "original_title", e.get("translation_of"), f"{loc}.translation_of")
+            for c in e.get("contributions") or []:
+                if re.search(r"translator|옮김|역", str(c), re.I):
+                    _add(out, "translator", re.sub(r"\s*\(?translator\)?", "", str(c), flags=re.I).strip(), f"{loc}.contributions")
     return out
 
 
@@ -212,6 +210,13 @@ def html_meta(html: str, url: str = "") -> List[Field]:
         _add(out, "isbn", isb, "text:isbn", "pattern")
     for m in list(DOI_RE.finditer(text))[:3]:
         _add(out, "doi", m.group(0), "text:doi", "pattern")
+    seen = []
+    for m in re.finditer(r"[『《]([^』》\n]{2,40})[』》]", text):   # 본문에 언급된 작품명 후보(제목 문자열만 저장, 문장은 저장하지 않음)
+        t = m.group(1).strip()
+        if t not in seen and HANGUL.search(t):
+            seen.append(t)
+    for t in seen[:10]:
+        _add(out, "mention_title", t, "text:mention", "pattern")
     _add(out, "text_chars", len(re.sub(r"\s+", " ", text).strip()), "text", "pattern")
     _add(out, "text_hash", hashlib.sha256(re.sub(r"\s+", " ", text).strip().encode()).hexdigest()[:16], "text", "pattern")
     return out
@@ -316,13 +321,13 @@ def image_fields(data: bytes) -> List[Field]:
 
 
 def extract_by_kind(kind: str, content: bytes, url: str, ctype: str) -> Tuple[str, List[Field]]:
-    """(extractor 이름, 필드). kind: openalex / wikidata_sparql / wikidata_entities / crossref / html / pdf / image / feed(링크만)"""
+    """(extractor 이름, 필드). kind: openalex / ol_subject / ol_editions / crossref / html / pdf / image / feed(링크만)"""
     if kind == "openalex":
         return "openalex", openalex(json.loads(content))
-    if kind == "wikidata_sparql":
-        return "wikidata_sparql", wikidata_sparql(json.loads(content))
-    if kind == "wikidata_entities":
-        return "wikidata_entities", wikidata_entities(json.loads(content))
+    if kind == "ol_subject":
+        return "ol_subject", ol_subject(json.loads(content))
+    if kind == "ol_editions":
+        return "ol_editions", ol_editions(json.loads(content))
     if kind == "crossref":
         return "crossref", crossref(json.loads(content))
     if kind == "pdf":

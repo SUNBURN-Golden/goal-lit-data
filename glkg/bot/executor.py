@@ -44,10 +44,11 @@ def extractor_kind(url: str, method: str, ctype: str) -> str:
         return "openalex"
     if host == "api.crossref.org":
         return "crossref"
-    if host == "query.wikidata.org":
-        return "wikidata_sparql"
-    if host.endswith("wikidata.org") and "/w/api.php" in url:
-        return "wikidata_entities"
+    if host == "openlibrary.org":
+        if "/subjects/" in url:
+            return "ol_subject"
+        if "/editions.json" in url:
+            return "ol_editions"
     if method in ("html", "browser"):
         return "html"
     return method  # pdf / image / feed / api(unknown json)

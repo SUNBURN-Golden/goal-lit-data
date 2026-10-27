@@ -9,7 +9,9 @@
 | 키 | 지원 | 수집 방법 | 수집 가능 필드 | 이용 권한 | 갱신 | 보관 | 미지원 범위 |
 |---|---|---|---|---|---|---|---|
 | `openalex_api` | supported | 공식 공개 API (키 불필요, 정직한 UA) | 제목, 초록(비공개 수집함에만, 지식그래프엔 위치·해시만), 발행연도, DOI, 저자명, OpenAlex ID | metadata_only | 168h | 365일 | 논문 전문, 인용 네트워크 전수, 초록 문장의 복사·게시 |
-| `wikidata_api` | supported | 공식 공개 API·SPARQL 엔드포인트 (키 불필요, 정직한 UA, robots 확인) | 작품 제목, 원제, 저자, 발행일, 출판사, ISBN, 번역자, 원어 | metadata_only | 168h | 365일 | 대량 덤프 수집, 편집(쓰기) |
+| `wikidata_api` | unsupported | 수집 안 함 — robots.txt 가 `/w/`(API)·`/sparql` 을 일반 봇에 불허 | — | link_only | — | 0일 | API·SPARQL 자동 수집 전부 |
+| `openlibrary_api` | supported | robots 허용 경로만: `/subjects/*.json`, `/works/*/editions.json`, `/authors/*/works.json` | 작품명, 저자명, 최초 발행연도, 판본 ISBN·출판사·발행연도, 언어, 원제(번역서) | metadata_only | 168h | 365일 | `/search`·`/api` 경로, 대량 덤프, 영문 제목 번역서를 한글 작품과 제목 유사도로 합치기 |
+| `google_books_api` | unsupported | 키 없는 호출은 일일 한도 0 — 키 발급은 계정 연결이라 승인 필요 | — | link_only | — | 0일 | 키 없이는 전부 |
 | `crossref_api` | supported | 공식 공개 REST API (정직한 UA, polite 속도) | 제목, 저자, DOI, 발행연도, 참고문헌 DOI 목록 | metadata_only | 168h | 365일 | 논문 전문, 초록 문장 복사 |
 | `doi_resolver` | limited | DOI는 식별자·링크로만 사용. 랜딩 페이지 본문은 도메인별 robots 감사 통과 시에만 | DOI 문자열, 리다이렉트 대상 URL | link_only | 720h | 365일 | 출판사 랜딩/전문 페이지 본문 일괄 수집 |
 | `nlk_catalog` | limited | 공개 서지 페이지/OpenAPI. OpenAPI는 인증키 필요 — 키 미구성 | ISBN, 출판사, 발행연도, 쪽수, 저자 표기 | metadata_only | 720h | 730일 | 인증키가 필요한 OpenAPI 대량 조회(키 없음), 로그인 영역 |
@@ -39,4 +41,5 @@
 
 
 ## 확인한 제외 사례
+- **Wikidata**: robots.txt 가 `/w/`(api.php)와 `query.wikidata.org/sparql` 을 일반 봇에 불허 → 수집하지 않는다.
 - **Open Library 검색(`/search.json`)**: robots.txt 가 `/search`·`/api` 접두 경로를 일반 봇에 불허하므로 수집하지 않는다(우회 없음). 서지 발견은 Wikidata/OpenAlex/Crossref 로 한다.

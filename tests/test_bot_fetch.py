@@ -19,7 +19,7 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "LOCK_DIR", tmp_path / "locks")
     kg = db.open_kg(tmp_path / "kg.db")
     reg = Registry(robots_path=ROBOTS)
-    tr = FakeTransport({"https://api.openalex.org/robots.txt": ROBOTS_OK, "https://query.wikidata.org/robots.txt": ROBOTS_OK, "https://ok-news.test/robots.txt": ROBOTS_OK})
+    tr = FakeTransport({"https://api.openalex.org/robots.txt": ROBOTS_OK, "https://openlibrary.org/robots.txt": ROBOTS_OK, "https://ok-news.test/robots.txt": ROBOTS_OK})
 
     def mk(budget=None, renderer=None):
         return FetchExecutor(kg, reg, tr, no_sleep_clock(tmp_path), budget or Budget(kg), tmp_path / "raw", renderer)
@@ -123,37 +123,46 @@ def test_domain_interval_enforced(tmp_path):
     assert len(slept) == 1
 
 
-def test_wikidata_promotes_new_works_as_source_claims_only(env):
+def test_ol_subject_promotes_new_works_as_source_claims_only(env):
     kg, reg, tr, mk, _ = env
-    tr.routes["https://query.wikidata.org/sparql"] = (200, "application/sparql-results+json", WIKIDATA)
+    tr.routes["https://openlibrary.org/subjects/"] = (200, "application/json", OL_SUBJECT)
     ex = mk()
-    res, st = collect(kg, ex, "https://query.wikidata.org/sparql?query=q1", "discovery")
-    assert st["new_works"] == 1 and st["new_candidates"] == 1
+    res, st = collect(kg, ex, "https://openlibrary.org/subjects/korean_fiction.json?limit=3", "discovery")
+    assert st["new_works"] == 1 and st["new_candidates"] == 1           # 영문 제목은 후보에서 제외, 작가 없는 건 후보로만
     w = kg.execute("SELECT * FROM work").fetchall()
     assert [x["canonical_title"] for x in w] == ["가상의 바다"]
     wid = w[0]["work_id"]
     facts = {r["predicate"]: r["value_text"] for r in kg.execute("SELECT predicate,value_text FROM bib_fact WHERE subject_id=?", (wid,))}
-    assert facts == {"pub_year": "2011", "publisher": "가상출판사"}
-    assert kg.execute("SELECT isbn FROM edition WHERE work_id=?", (wid,)).fetchone()[0] == "9788954632706"
+    assert facts == {"pub_year": "2011"}
+    assert kg.execute("SELECT entity_id FROM external_id WHERE scheme='openlibrary_work' AND value='/works/OL1W'").fetchone()[0] == wid
     assert kg.execute("SELECT count(*) FROM bib_fact WHERE epistemic_status!='source_claim'").fetchone()[0] == 0
-    lab = kg.execute("SELECT label, origin_class FROM doc_label").fetchall()
-    assert [(l[0], l[1]) for l in lab] == [("서지", "independent")]
-    # 같은 응답을 다시 → 중복 없음
-    n = [kg.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in ("work", "bib_fact", "edition", "work_author", "work_candidate", "extraction")]
-    res2, _ = collect(kg, ex, "https://query.wikidata.org/sparql?query=q1", "discovery")
-    assert res2.outcome == "unchanged"
-    n2 = [kg.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in ("work", "bib_fact", "edition", "work_author", "work_candidate", "extraction")]
-    assert n == n2
+    assert kg.execute("SELECT count(*) FROM extraction WHERE field='skipped_non_korean_title' AND value='1'").fetchone()[0] == 1
+    n = lambda: [kg.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in ("work", "bib_fact", "edition", "work_author", "work_candidate", "extraction", "external_id")]
+    before = n()
+    res2, _ = collect(kg, ex, "https://openlibrary.org/subjects/korean_fiction.json?limit=3", "discovery")
+    assert res2.outcome == "unchanged" and n() == before          # 같은 응답을 다시 → 중복 없음
+
+
+def test_ol_editions_korean_only_for_required_fields_translations_labeled(env):
+    kg, reg, tr, mk, _ = env
+    tr.routes["https://openlibrary.org/subjects/"] = (200, "application/json", OL_SUBJECT)
+    tr.routes["https://openlibrary.org/works/OL1W/editions.json"] = (200, "application/json", OL_EDITIONS)
+    ex = mk()
+    collect(kg, ex, "https://openlibrary.org/subjects/korean_fiction.json?limit=3", "discovery")
+    res, st = collect(kg, ex, "https://openlibrary.org/works/OL1W/editions.json?limit=50", "backfill")
+    eds = {r["isbn"]: r["label"] for r in kg.execute("SELECT isbn,label FROM edition")}
+    assert eds == {"9788954632706": "ko", "9780306406157": "translation:eng", "9788936472559": "ko"}
+    pubs = sorted(r["value_text"] for r in kg.execute("SELECT value_text FROM bib_fact WHERE subject_type='edition' AND predicate='publisher'"))
+    assert pubs == ["가상출판사"]                               # 'Unknown' 출판사는 값으로 취급하지 않음, 영문판 출판사는 한국어 필수 필드에 세지 않음
 
 
 def test_conflicting_year_is_kept_as_conflict_not_overwritten(env):
     kg, reg, tr, mk, _ = env
-    tr.routes["https://query.wikidata.org/sparql"] = (200, "application/sparql-results+json", WIKIDATA)
+    tr.routes["https://openlibrary.org/subjects/"] = (200, "application/json", OL_SUBJECT)
     ex = mk()
-    collect(kg, ex, "https://query.wikidata.org/sparql?query=q1", "discovery")
-    other = WIKIDATA.replace("2011-03-01", "2012-03-01")
-    tr.routes["https://query.wikidata.org/sparql"] = (200, "application/sparql-results+json", other)
-    collect(kg, ex, "https://query.wikidata.org/sparql?query=q2", "discovery")
+    collect(kg, ex, "https://openlibrary.org/subjects/korean_fiction.json?limit=3", "discovery")
+    tr.routes["https://openlibrary.org/subjects/"] = (200, "application/json", OL_SUBJECT.replace("2011", "2012"))
+    collect(kg, ex, "https://openlibrary.org/subjects/korean_poetry.json?limit=3", "discovery")
     years = sorted(r[0] for r in kg.execute("SELECT value_text FROM bib_fact WHERE predicate='pub_year'"))
     assert years == ["2011", "2012"]                      # 둘 다 남음(덮어쓰기 없음)
     assert kg.execute("SELECT count(*) FROM conflict WHERE status='open'").fetchone()[0] == 1
@@ -246,3 +255,13 @@ def test_pdf_route_through_executor_records_fields(env):
     r, _ = collect(kg, mk(), "https://ok-news.test/d.pdf", "backfill")
     assert r.method == "pdf"
     assert kg.execute("SELECT count(*) FROM extraction WHERE field='isbn' AND value='9788954632706'").fetchone()[0] == 1
+
+
+def test_crawl_delay_widens_domain_interval(env):
+    kg, reg, tr, mk, _ = env
+    tr.routes["https://ok-news.test/robots.txt"] = (200, "text/plain", "User-agent: *bot\nCrawl-delay: 10\n\nUser-agent: *\nAllow: /\nSitemap: https://ok-news.test/sm.xml\n")
+    ex = mk()
+    ok, _ = ex.gate.allowed("https://ok-news.test/a")
+    assert ok and ex.clock.per_domain["ok-news.test"] == 10.0
+    assert ex.gate.sitemaps["ok-news.test"] == ["https://ok-news.test/sm.xml"]
+    assert H.crawl_delay_for("User-agent: ClaudeBot\nCrawl-delay: 10\n") == 0.0

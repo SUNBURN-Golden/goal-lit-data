@@ -10,7 +10,7 @@ REVIEW = re.compile(r"서평|리뷰|독후감|책\s*읽기|북리뷰|book review
 CRITIC = re.compile(r"비평|평론|논평|critique|criticism|해체|연구|고찰|분석", re.I)
 INTERPRET = re.compile(r"해석|재해석|독법|읽기|의미|상징|interpret", re.I)
 INDEP_KEYS = {"openalex_api", "crossref_api", "kci_journal"}
-BIB_KEYS = {"wikidata_api", "nlk_catalog", "doi_resolver"}
+BIB_KEYS = {"openlibrary_api", "nlk_catalog", "doi_resolver"}
 
 
 def label_doc(kind: str, fields: Dict[str, List[str]], registry_key: str, reg_kind: str) -> List[Tuple[str, str, str]]:
@@ -19,9 +19,12 @@ def label_doc(kind: str, fields: Dict[str, List[str]], registry_key: str, reg_ki
     out: List[Tuple[str, str, str]] = []
     doc_kind = (fields.get("doc_kind") or [""])[0]
     promo_text = bool(PROMO_WORDS.search(title))
+    if doc_kind == "edition_record":
+        out.append(("서지", "unknown", f"판본 레코드;registry={registry_key}"))
+        return out
     if doc_kind == "book_record" or (fields.get("isbn") and fields.get("publisher") and title):
         if registry_key in BIB_KEYS:
-            oc = "independent" if registry_key in ("wikidata_api", "nlk_catalog") else "unknown"
+            oc = "independent" if registry_key in ("nlk_catalog",) else "unknown"
         elif reg_kind in PROMO_REG_KINDS or promo_text:
             oc = "promo"
         else:

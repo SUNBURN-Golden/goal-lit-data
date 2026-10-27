@@ -13,7 +13,7 @@ from ..stages import common as C
 from . import EXTRACTOR_VERSION, extractors as X, labeler
 from .policy import effective_policy
 
-GROUP_RE = re.compile(r"^(results\[\d+\]|bindings\[\d+\]|items\[\d+\]|entities\.Q\d+)")
+GROUP_RE = re.compile(r"^(results\[\d+\]|works\[\d+\]|entries\[\d+\]|items\[\d+\])")
 LISTY = {"author", "paper_author", "translator", "isbn", "cites", "cites_doi", "keyword", "title", "publisher", "pub_year", "original_title"}
 
 
@@ -39,7 +39,7 @@ def _vals(grp, f):
 
 
 def entity_url(grp, fallback: str) -> str:
-    for f, pat in (("wikidata_id", "https://www.wikidata.org/wiki/{}"), ("openalex_id", "{}"), ("doi", "https://doi.org/{}")):
+    for f, pat in (("ol_work_key", "https://openlibrary.org{}"), ("openalex_id", "{}"), ("doi", "https://doi.org/{}")):
         v = _vals(grp, f)
         if v:
             return pat.format(v[0])
@@ -126,10 +126,52 @@ def add_author_claim(conn, work_id, name, role, sid, url, evid, now, pol):
     C.insert_claim(conn, "work_author", dict(wa_id=wid, work_id=work_id, author_id=aid, role=role, **_claim_common(sid, url, evid, now, pol)))
 
 
-def add_edition(conn, work_id, isbn, sid, url, evid, now, pol):
+def add_edition(conn, work_id, isbn, sid, url, evid, now, pol, label=""):
     eid = stable_id("ed", work_id, isbn)
-    C.insert_claim(conn, "edition", dict(edition_id=eid, work_id=work_id, isbn=isbn, label="", identity_status="provisional",
+    C.insert_claim(conn, "edition", dict(edition_id=eid, work_id=work_id, isbn=isbn, label=label, identity_status="provisional",
                                          **_claim_common(sid, url, evid, now, pol)))
+
+
+def register_external(conn, etype: str, eid: str, scheme: str, value: str, sid: str, now: str) -> None:
+    if value:
+        conn.execute("INSERT OR IGNORE INTO external_id(entity_type,entity_id,scheme,value,source_id,recorded_at) VALUES(?,?,?,?,?,?)", (etype, eid, scheme, value, sid, now))
+
+
+def work_by_external(conn, scheme: str, value: str) -> Optional[str]:
+    r = conn.execute("SELECT entity_id FROM external_id WHERE scheme=? AND value=? AND entity_type='work'", (scheme, value)).fetchone()
+    return r["entity_id"] if r else None
+
+
+def add_edition_fact(conn, edition_id: str, pred: str, value: str, sid, url, evid, now, pol) -> None:
+    fid = stable_id("bf", edition_id, pred, norm(value), sid)
+    C.insert_claim(conn, "bib_fact", dict(fact_id=fid, subject_type="edition", subject_id=edition_id, predicate=pred, value_text=value, **_claim_common(sid, url, evid, now, pol)))
+
+
+def promote_editions(conn, grps, doc_url: str, sid: str, doc_id: str, now: str, pol, stats) -> None:
+    m = re.search(r"/works/(OL\w+W)/editions", doc_url)
+    work_id = work_by_external(conn, "openlibrary_work", "/works/" + m.group(1)) if m else None
+    if not work_id:
+        stats["editions_unmapped"] = stats.get("editions_unmapped", 0) + 1
+        return
+    for gkey, grp in grps.items():
+        if (_vals(grp, "doc_kind") or [""])[0] != "edition_record":
+            continue
+        lang = (_vals(grp, "edition_lang") or ["und"])[0]
+        ev = lambda f: ensure_evidence(conn, sid, f"doc:{doc_id}#{(grp.get(f) or [('', gkey, 'structured')])[0][1]}", "structured", now)
+        for i in _vals(grp, "isbn")[:2]:
+            add_edition(conn, work_id, i, sid, doc_url, ev("isbn"), now, pol, label="ko" if lang == "kor" else f"translation:{lang}")  # 번역판은 한국어 원서 필수 필드에 세지 않음
+            eid = stable_id("ed", work_id, i)
+            if lang != "kor":
+                continue
+            for f in ("publisher", "pub_year"):
+                for v in _vals(grp, f)[:1]:
+                    add_edition_fact(conn, eid, f, v, sid, doc_url, ev(f), now, pol)
+        if lang == "kor":
+            for v in _vals(grp, "original_title")[:1]:
+                add_work_claim(conn, work_id, "original_title", v, sid, doc_url, ev("original_title"), now, pol)
+            for t in _vals(grp, "translator")[:2]:
+                add_author_claim(conn, work_id, t, "translator", sid, doc_url, ev("translator"), now, pol)
+        stats["editions_seen"] = stats.get("editions_seen", 0) + 1
 
 
 def promote_book(conn, grp, sid: str, url: str, doc_id: str, now: str, pol, stats: Dict[str, int]) -> Optional[str]:
@@ -165,6 +207,10 @@ def promote_book(conn, grp, sid: str, url: str, doc_id: str, now: str, pol, stat
                      (cand_id, title, authors[0] if authors else "", year, isbns[0] if isbns else "", publisher, pol["registry_key"], doc_id, work_id, "duplicate", now))
         stats["matched_known"] = stats.get("matched_known", 0) + 1
     ev = lambda f: ensure_evidence(conn, sid, f"doc:{doc_id}#{(grp.get(f) or [('', '', '')])[0][1]}", (grp.get(f) or [('', '', 'structured')])[0][2], now)
+    for k in _vals(grp, "ol_work_key")[:1]:
+        register_external(conn, "work", work_id, "openlibrary_work", k, sid, now)
+    for nm, k in zip(authors, _vals(grp, "ol_author_key")):
+        register_external(conn, "author", ensure_author(conn, nm, now), "openlibrary_author", k, sid, now)
     for a in authors[:6]:
         add_author_claim(conn, work_id, a, "author", sid, url, ev("author"), now, pol)
     for t in _vals(grp, "translator")[:3]:
@@ -210,5 +256,8 @@ def parse_document(conn, doc_id: str, content: bytes, kind: str, url: str, ctype
             gurl = entity_url(grp, url)
             sid = ensure_source(conn, gurl, gurl if gurl != url else row["canonical_url"], row["domain"], pol, dk, now)
             promote_book(conn, grp, sid, gurl, doc_id, now, pol, stats)
+    if any((_vals(g, "doc_kind") or [""])[0] == "edition_record" for g in groups.values()) and pol["may_collect"]:
+        sid = ensure_source(conn, url, row["canonical_url"], row["domain"], pol, "book_record", now)
+        promote_editions(conn, groups, url, sid, doc_id, now, pol, stats)
     conn.execute("UPDATE raw_document SET parsed_version=?, parsed_at=? WHERE doc_id=?", (EXTRACTOR_VERSION, now, doc_id))
     return stats

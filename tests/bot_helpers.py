@@ -36,11 +36,14 @@ OPENALEX = json.dumps({"results": [
      "abstract_inverted_index": {"가상": [0]}},
     {"id": "https://openalex.org/W2", "display_name": "다른 논문", "publication_year": 2020, "authorships": [], "referenced_works": []}]})
 
-WIKIDATA = json.dumps({"results": {"bindings": [
-    {"work": {"value": "http://www.wikidata.org/entity/Q111"}, "workLabel": {"value": "가상의 바다"}, "authorLabel": {"value": "가상작가"},
-     "pub": {"value": "2011-03-01T00:00:00Z"}, "publisherLabel": {"value": "가상출판사"}, "isbn": {"value": "978-89-546-3270-6"}},
-    {"work": {"value": "http://www.wikidata.org/entity/Q112"}, "workLabel": {"value": "작가 없는 책"}, "pub": {"value": "2005-01-01T00:00:00Z"}},
-    {"work": {"value": "http://www.wikidata.org/entity/Q113"}, "workLabel": {"value": "Q113"}}]}})
+OL_SUBJECT = json.dumps({"name": "korean fiction", "work_count": 3, "works": [
+    {"key": "/works/OL1W", "title": "가상의 바다", "first_publish_year": 2011, "authors": [{"key": "/authors/OL1A", "name": "가상작가"}], "edition_count": 4},
+    {"key": "/works/OL2W", "title": "작가 없는 책", "first_publish_year": 2005, "authors": []},
+    {"key": "/works/OL3W", "title": "A Translated Title", "first_publish_year": 2015, "authors": [{"key": "/authors/OL1A", "name": "가상작가"}]}]})
+OL_EDITIONS = json.dumps({"size": 3, "entries": [
+    {"title": "가상의 바다", "isbn_13": ["9788954632706"], "publishers": ["가상출판사"], "publish_date": "2011", "languages": [{"key": "/languages/kor"}]},
+    {"title": "The Imaginary Sea", "isbn_13": ["9780306406157"], "publishers": ["Foreign House"], "publish_date": "Oct 28, 2016", "languages": [{"key": "/languages/eng"}]},
+    {"title": "가상의 바다 2쇄", "isbn_13": ["9788936472559"], "publishers": ["Unknown"], "publish_date": "2013"}]})
 
 BOOK_HTML = """<html><head><title>x</title><meta property="og:site_name" content="가상서점"/>
 <script type="application/ld+json">{"@type":"Book","name":"가상의 산","author":{"@type":"Person","name":"산작가"},"publisher":{"name":"산출판"},"isbn":"9788936472559","datePublished":"2014-06-01"}</script>
