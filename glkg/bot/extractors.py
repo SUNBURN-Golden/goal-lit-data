@@ -139,21 +139,55 @@ def ol_editions(doc: Dict[str, Any]) -> List[Field]:
     return out
 
 
+def ol_author_works(doc: Dict[str, Any], url: str = "") -> List[Field]:
+    """저자 → 다른 작품(허용 경로 /authors/OL..A/works.json). 저자명은 문서에 없어 키만 남기고, 이름은 승격 단계가 외부 식별자표로 찾는다."""
+    out: List[Field] = []
+    m = re.search(r"/authors/(OL\w+A)/works", url)
+    url_key = "/authors/" + m.group(1) if m else ""
+    skipped = 0
+    for i, w in enumerate(doc.get("entries") or []):
+        loc = f"entries[{i}]"
+        title = w.get("title") or ""
+        if not HANGUL.search(title):
+            skipped += 1
+            continue
+        _add(out, "doc_kind", "book_record", loc)
+        _add(out, "title", title, f"{loc}.title")
+        _add(out, "ol_work_key", w.get("key"), f"{loc}.key")
+        _add(out, "pub_year", _ol_year(w.get("first_publish_date")), f"{loc}.first_publish_date")
+        keys = [((a.get("author") or {}).get("key")) for a in (w.get("authors") or [])] or [url_key]
+        for k in keys[:3]:
+            _add(out, "ol_author_key", k, f"{loc}.authors")
+    _add(out, "skipped_non_korean_title", skipped, "$", "pattern")
+    return out
+
+
 # ---------- Crossref ----------
+BOOK_TYPES = {"book", "monograph", "edited-book", "reference-book", "book-set", "book-series"}
+
+
 def crossref(doc: Dict[str, Any]) -> List[Field]:
     out: List[Field] = []
     msg = doc.get("message") or {}
     items = msg.get("items") if isinstance(msg.get("items"), list) else [msg]
     for i, w in enumerate(items):
         loc = f"items[{i}]" if isinstance(msg.get("items"), list) else "message"
-        _add(out, "doc_kind", "paper", loc)
-        _add(out, "title", (w.get("title") or [""])[0], f"{loc}.title")
+        title0 = (w.get("title") or [""])[0]
+        is_book = w.get("type") in BOOK_TYPES
+        if is_book and not HANGUL.search(title0):
+            continue        # 한글 제목 도서만 작품 후보로(영문 번역서는 같은 작품으로 합치지 않는다)
+        _add(out, "doc_kind", "book_record" if is_book else "paper", loc)
+        _add(out, "title", title0, f"{loc}.title")
         _add(out, "doi", w.get("DOI"), f"{loc}.DOI")
+        if is_book:
+            for k in (w.get("ISBN") or [])[:3]:
+                _add(out, "isbn", isbn_ok(str(k)), f"{loc}.ISBN")
         yr = ((w.get("issued") or {}).get("date-parts") or [[None]])[0][0]
-        _add(out, "pub_year", yr, f"{loc}.issued")
-        _add(out, "publisher", w.get("publisher"), f"{loc}.publisher")
+        ed = "ed_" if (is_book and w.get("ISBN")) else ""   # ISBN 이 있는 도서의 발행 연도·출판사는 '그 판본'의 값(초판 연도와 섞어 충돌로 만들지 않는다)
+        _add(out, ed + "pub_year", yr, f"{loc}.issued")
+        _add(out, ed + "publisher", w.get("publisher"), f"{loc}.publisher")
         for a in w.get("author", []) or []:
-            _add(out, "paper_author", " ".join(x for x in (a.get("family"), a.get("given")) if x), f"{loc}.author")
+            _add(out, "author" if is_book else "paper_author", " ".join(x for x in (a.get("family"), a.get("given")) if x), f"{loc}.author")
         for r in (w.get("reference") or [])[:80]:
             if r.get("DOI"):
                 _add(out, "cites_doi", r["DOI"], f"{loc}.reference")
@@ -328,6 +362,8 @@ def extract_by_kind(kind: str, content: bytes, url: str, ctype: str) -> Tuple[st
         return "ol_subject", ol_subject(json.loads(content))
     if kind == "ol_editions":
         return "ol_editions", ol_editions(json.loads(content))
+    if kind == "ol_author_works":
+        return "ol_author_works", ol_author_works(json.loads(content), url)
     if kind == "crossref":
         return "crossref", crossref(json.loads(content))
     if kind == "pdf":

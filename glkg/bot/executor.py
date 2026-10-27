@@ -49,6 +49,8 @@ def extractor_kind(url: str, method: str, ctype: str) -> str:
             return "ol_subject"
         if "/editions.json" in url:
             return "ol_editions"
+        if "/authors/" in url and "/works.json" in url:
+            return "ol_author_works"
     if method in ("html", "browser"):
         return "html"
     return method  # pdf / image / feed / api(unknown json)
