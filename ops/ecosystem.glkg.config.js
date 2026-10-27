@@ -4,8 +4,8 @@ const REPO = process.env.GLKG_REPO || "/workspace/gl-data/run";
 const LOGS = process.env.GLKG_LOG_DIR || "/workspace/lit-hub/collector/logs";
 const mk = (stage, interval, offset) => ({
   name: `glkg-${stage}`,
-  script: "-m",
-  args: `glkg daemon ${stage} --interval ${interval} --offset ${offset}`,
+  script: `${REPO}/ops/glkg_daemon.py`,
+  args: `${stage} --interval ${interval} --offset ${offset}`,
   interpreter: "python3",
   cwd: REPO,
   autorestart: true,
