@@ -1,0 +1,13 @@
+# 원문 저장소·서비스 DB·로그·비밀은 절대 커밋하지 않는다
+data/
+raw/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite*
+*.jsonl
+logs/
+.env*
+*.pem
+__pycache__/
+.pytest_cache/
