@@ -1,231 +1,381 @@
 {
-  "version": 1,
-  "updated": "2026-10-27",
-  "global_rules": {
-    "max_daily_discovered": 500,
-    "max_daily_fetched": 200,
-    "max_concurrent_per_domain": 1,
-    "min_domain_interval_sec": 5,
-    "max_link_depth": 2,
-    "auto_publish_to_site": false,
-    "honest_user_agent": "GoalLitCollector/1.0 (+https://goallit.soulbound.co.kr; respectful-archiver)",
-    "never": ["사람 위장(UA·행동 흉내)", "계정 교체·회전", "프록시·IP 우회", "robots.txt/AI 차단 우회", "로그인·결제·비공개 영역 수집", "크롤 트랩(달력·무한 페이지네이션)"]
-  },
-  "sources": [
-    {
-      "key": "openalex_api",
-      "name": "OpenAlex 공개 API (학술 메타데이터)",
-      "kind": "api",
-      "support_level": "supported",
-      "domains": ["api.openalex.org", "openalex.org"],
-      "access_method": "공식 공개 API (키 불필요, 정직한 UA)",
-      "collectable_fields": ["제목", "초록(비공개 수집함에만, 지식그래프엔 위치·해시만)", "발행연도", "DOI", "저자명", "OpenAlex ID"],
-      "usage_basis": "metadata_only",
-      "refresh_hours": 168,
-      "retention_days": 365,
-      "unsupported_scope": "논문 전문, 인용 네트워크 전수, 초록 문장의 복사·게시",
-      "default_access_level": "paper_abstract"
-    },
-    {
-      "key": "doi_resolver",
-      "name": "DOI 링크(doi.org)",
-      "kind": "catalog",
-      "support_level": "limited",
-      "domains": ["doi.org"],
-      "access_method": "DOI는 식별자·링크로만 사용. 랜딩 페이지 본문은 도메인별 robots 감사 통과 시에만",
-      "collectable_fields": ["DOI 문자열", "리다이렉트 대상 URL"],
-      "usage_basis": "link_only",
-      "refresh_hours": 720,
-      "retention_days": 365,
-      "unsupported_scope": "출판사 랜딩/전문 페이지 본문 일괄 수집",
-      "default_access_level": "paper_abstract"
-    },
-    {
-      "key": "nlk_catalog",
-      "name": "국립중앙도서관 서지 (ISBN)",
-      "kind": "catalog",
-      "support_level": "limited",
-      "domains": ["nl.go.kr", "www.nl.go.kr"],
-      "access_method": "공개 서지 페이지/OpenAPI. OpenAPI는 인증키 필요 — 키 미구성",
-      "collectable_fields": ["ISBN", "출판사", "발행연도", "쪽수", "저자 표기"],
-      "usage_basis": "metadata_only",
-      "refresh_hours": 720,
-      "retention_days": 730,
-      "unsupported_scope": "인증키가 필요한 OpenAPI 대량 조회(키 없음), 로그인 영역",
-      "credential_status": "not_configured",
-      "default_access_level": "book_intro"
-    },
-    {
-      "key": "booker_library",
-      "name": "The Booker Prizes 공식 라이브러리",
-      "kind": "official_entry",
-      "support_level": "supported",
-      "domains": ["thebookerprizes.com"],
-      "access_method": "공개 페이지 (robots 감사 ok), 필요 시 승인된 JS 렌더링",
-      "collectable_fields": ["수상·후보 이력", "연도", "번역자", "출판사"],
-      "usage_basis": "metadata_only",
-      "refresh_hours": 720,
-      "retention_days": 730,
-      "unsupported_scope": "에세이·인터뷰 전문",
-      "default_access_level": "book_intro"
-    },
-    {
-      "key": "press_robots_ok",
-      "name": "언론·문예지 (robots 감사 통과 호스트)",
-      "kind": "article",
-      "support_level": "supported",
-      "domains": ["magazine.changbi.com"],
-      "domains_from_audit": "ok",
-      "access_method": "RSS·사이트맵·공개 기사 페이지, live robots.txt 재확인(우리 UA + GPTBot/ClaudeBot/CCBot/anthropic-ai/Google-Extended 중 하나라도 불허면 중단)",
-      "collectable_fields": ["제목", "발행일", "매체", "URL", "기사 내 근거 위치", "편집자 요약(우리 문장)"],
-      "usage_basis": "quote_le12",
-      "refresh_hours": 24,
-      "retention_days": 365,
-      "unsupported_scope": "기사 전문 저장·게시, 12자 초과 인용, 유료 구독 영역, 댓글",
-      "default_access_level": "press_article"
-    },
-    {
-      "key": "press_ai_blocked",
-      "name": "AI 크롤링 차단 언론·서점 (robots 감사 BLOCKS-AI)",
-      "kind": "article",
-      "support_level": "unsupported",
-      "domains": ["www.yna.co.kr"],
-      "domains_from_audit": "BLOCKS-AI",
-      "access_method": "수집 안 함. 과거 편집자가 확인한 '링크만' 인용(bare citation)만 유지",
-      "collectable_fields": [],
-      "usage_basis": "link_only",
-      "refresh_hours": null,
-      "retention_days": 365,
-      "unsupported_scope": "신규 수집 전부(본문·메타 자동 조회 포함). 차단 우회 시도 없음",
-      "default_access_level": "press_article"
-    },
-    {
-      "key": "kci_journal",
-      "name": "KCI 학술지 공개 초록 페이지",
-      "kind": "paper",
-      "support_level": "limited",
-      "domains": ["journal.kci.go.kr"],
-      "access_method": "승인 도메인의 공개 초록 페이지, robots 허용 경로만. www.kci.go.kr·dbpia는 정책상 제외",
-      "collectable_fields": ["논문 제목", "초록(비공개 수집함에만)", "학술지·권호", "저자명"],
-      "usage_basis": "metadata_only",
-      "refresh_hours": 720,
-      "retention_days": 365,
-      "unsupported_scope": "www.kci.go.kr, dbpia.co.kr, 논문 전문",
-      "default_access_level": "paper_abstract"
-    },
-    {
-      "key": "platform_public_cover",
-      "name": "웹소설·웹툰 플랫폼 공개 작품 표지/소개",
-      "kind": "catalog",
-      "support_level": "limited",
-      "domains": ["page.kakao.com", "novel.munpia.com", "series.naver.com", "comic.naver.com", "webtoon.kakao.com", "www.webtoons.com"],
-      "access_method": "승인 도메인 + robots 허용 공개 표지·작품 소개 1페이지만",
-      "collectable_fields": ["작품명", "연재처", "연재 상태", "공개 소개 문구 메타"],
-      "usage_basis": "metadata_only",
-      "refresh_hours": 168,
-      "retention_days": 365,
-      "unsupported_scope": "/webtoon/detail·/viewer/ 본문, 로그인·결제 영역, 댓글·평점",
-      "default_access_level": "book_intro"
-    },
-    {
-      "key": "naver_blog_booking",
-      "name": "네이버 블로그·예약·지도",
-      "kind": "social",
-      "support_level": "unsupported",
-      "domains": ["blog.naver.com", "rss.blog.naver.com", "booking.naver.com", "map.naver.com", "pcmap.place.naver.com"],
-      "access_method": "수집 안 함 (robots가 AI 수집 차단)",
-      "collectable_fields": [],
-      "usage_basis": "link_only",
-      "refresh_hours": null,
-      "retention_days": 0,
-      "unsupported_scope": "전부",
-      "default_access_level": "press_article"
-    },
-    {
-      "key": "other_blocked_policy",
-      "name": "정책 제외 사이트 (DC인사이드·DBpia 등)",
-      "kind": "social",
-      "support_level": "unsupported",
-      "domains": ["dcinside.com", "dbpia.co.kr", "www.kci.go.kr"],
-      "access_method": "수집 안 함",
-      "collectable_fields": [],
-      "usage_basis": "link_only",
-      "refresh_hours": null,
-      "retention_days": 0,
-      "unsupported_scope": "전부",
-      "default_access_level": "press_article"
-    },
-    {
-      "key": "instagram_graph_api",
-      "name": "Instagram 공식 API (Graph API: 비즈니스 계정 연결, oEmbed)",
-      "kind": "social",
-      "support_level": "unsupported",
-      "domains": ["graph.facebook.com", "graph.instagram.com"],
-      "access_method": "Meta 공식 Graph API. 앱 등록·앱 검수·접근 토큰 필요. 현재 자격 미구성이라 비활성",
-      "collectable_fields": ["(활성화 시) 연결한 우리 비즈니스 계정의 미디어 캡션·퍼마링크·게시시각", "(활성화 시) 공개 비즈니스/크리에이터 계정 business_discovery 메타", "(활성화 시) 공개 게시물 oEmbed"],
-      "usage_basis": "metadata_only",
-      "refresh_hours": 24,
-      "retention_days": 90,
-      "unsupported_scope": "현재 전부(자격 없음). 활성화에는 '계정 연결'이 필요하므로 준태님 승인 후에만. 개인(비전문가) 계정·비공개 계정·DM·스토리·팔로워 목록은 공식 API로도 범위 밖",
-      "credential_status": "not_configured",
-      "requires_user_approval": "계정 연결",
-      "default_access_level": "press_article"
-    },
-    {
-      "key": "instagram_public_pages",
-      "name": "Instagram 공개 웹 페이지 자동 수집",
-      "kind": "social",
-      "support_level": "unsupported",
-      "domains": ["instagram.com", "www.instagram.com"],
-      "access_method": "수집 안 함. instagram.com/robots.txt가 '명시적 서면 허가 없는 자동 수집 금지'를 선언하고 AI 크롤러를 차단하며, 정책 차단 호스트로 등록됨. 로그인 벽·행동 위장·계정/프록시 회전으로 우회하지 않는다",
-      "collectable_fields": [],
-      "usage_basis": "link_only",
-      "refresh_hours": null,
-      "retention_days": 0,
-      "unsupported_scope": "자동 수집 전부. 이 항목은 미지원으로 기록만 한다",
-      "default_access_level": "press_article"
-    },
-    {
-      "key": "manual_clip_extension",
-      "name": "수동 담기 크롬 확장 (activeTab, 사람이 누를 때만)",
-      "kind": "clip",
-      "support_level": "limited",
-      "domains": ["*"],
-      "access_method": "사람이 보고 있는 페이지에서 '이 자료 담기'를 눌렀을 때만 동작. 인스타 게시물도 사람이 직접 열어 본 것을 담는 경우에 한해 가능(자동 순회·예약 없음)",
-      "collectable_fields": ["페이지 제목", "URL", "선택 텍스트(PII 필터 통과 후)", "게시 시각 메타"],
-      "usage_basis": "quote_le12",
-      "refresh_hours": null,
-      "retention_days": 180,
-      "unsupported_scope": "무인 수집, 로그인 정보·입력창·댓글·DM, 페이지 전체 덤프",
-      "default_access_level": "press_article"
-    },
-    {
-      "key": "internal_site_records",
-      "name": "꼴릿 사이트 내부 기록 (works.json·posts.json)",
-      "kind": "internal",
-      "support_level": "supported",
-      "domains": ["goallit.soulbound.co.kr"],
-      "access_method": "로컬 파일 읽기",
-      "collectable_fields": ["작품 서지 단서", "미확인 목록", "에세이 근거 묶음 메타"],
-      "usage_basis": "own_work",
-      "refresh_hours": 24,
-      "retention_days": null,
-      "unsupported_scope": "내부 기록만으로는 '확인된 사실'이 되지 않음(외부 출처 필요)",
-      "default_access_level": "book_intro"
-    },
-    {
-      "key": "unregistered",
-      "name": "레지스트리에 없는 호스트",
-      "kind": "article",
-      "support_level": "unsupported",
-      "domains": [],
-      "access_method": "robots 감사를 거쳐 등록되기 전까지 수집 안 함",
-      "collectable_fields": [],
-      "usage_basis": "link_only",
-      "refresh_hours": null,
-      "retention_days": 365,
-      "unsupported_scope": "등록 전 전부",
-      "default_access_level": "press_article"
-    }
+ "version": 1,
+ "updated": "2026-10-27",
+ "global_rules": {
+  "max_daily_discovered": 500,
+  "max_daily_fetched": 200,
+  "max_concurrent_per_domain": 1,
+  "min_domain_interval_sec": 5,
+  "max_link_depth": 2,
+  "auto_publish_to_site": false,
+  "honest_user_agent": "GoalLitCollector/1.0 (+https://goallit.soulbound.co.kr; respectful-archiver)",
+  "never": [
+   "사람 위장(UA·행동 흉내)",
+   "계정 교체·회전",
+   "프록시·IP 우회",
+   "robots.txt/AI 차단 우회",
+   "로그인·결제·비공개 영역 수집",
+   "크롤 트랩(달력·무한 페이지네이션)"
   ]
+ },
+ "sources": [
+  {
+   "key": "openalex_api",
+   "name": "OpenAlex 공개 API (학술 메타데이터)",
+   "kind": "api",
+   "support_level": "supported",
+   "domains": [
+    "api.openalex.org",
+    "openalex.org"
+   ],
+   "access_method": "공식 공개 API (키 불필요, 정직한 UA)",
+   "collectable_fields": [
+    "제목",
+    "초록(비공개 수집함에만, 지식그래프엔 위치·해시만)",
+    "발행연도",
+    "DOI",
+    "저자명",
+    "OpenAlex ID"
+   ],
+   "usage_basis": "metadata_only",
+   "refresh_hours": 168,
+   "retention_days": 365,
+   "unsupported_scope": "논문 전문, 인용 네트워크 전수, 초록 문장의 복사·게시",
+   "default_access_level": "paper_abstract"
+  },
+  {
+   "key": "wikidata_api",
+   "name": "Wikidata 공개 API·SPARQL (작품·판본 서지, CC0)",
+   "kind": "api",
+   "support_level": "supported",
+   "domains": [
+    "www.wikidata.org",
+    "wikidata.org",
+    "query.wikidata.org"
+   ],
+   "access_method": "공식 공개 API·SPARQL 엔드포인트 (키 불필요, 정직한 UA, robots 확인)",
+   "collectable_fields": [
+    "작품 제목",
+    "원제",
+    "저자",
+    "발행일",
+    "출판사",
+    "ISBN",
+    "번역자",
+    "원어"
+   ],
+   "usage_basis": "metadata_only",
+   "refresh_hours": 168,
+   "retention_days": 365,
+   "unsupported_scope": "대량 덤프 수집, 편집(쓰기)",
+   "default_access_level": "book_intro"
+  },
+  {
+   "key": "crossref_api",
+   "name": "Crossref 공개 REST API (학술 메타데이터)",
+   "kind": "api",
+   "support_level": "supported",
+   "domains": [
+    "api.crossref.org"
+   ],
+   "access_method": "공식 공개 API (정직한 UA·mailto 없이 polite 속도)",
+   "collectable_fields": [
+    "제목",
+    "저자",
+    "DOI",
+    "발행연도",
+    "참고문헌 DOI 목록"
+   ],
+   "usage_basis": "metadata_only",
+   "refresh_hours": 168,
+   "retention_days": 365,
+   "unsupported_scope": "논문 전문, 초록 문장 복사",
+   "default_access_level": "paper_abstract"
+  },
+  {
+   "key": "doi_resolver",
+   "name": "DOI 링크(doi.org)",
+   "kind": "catalog",
+   "support_level": "limited",
+   "domains": [
+    "doi.org"
+   ],
+   "access_method": "DOI는 식별자·링크로만 사용. 랜딩 페이지 본문은 도메인별 robots 감사 통과 시에만",
+   "collectable_fields": [
+    "DOI 문자열",
+    "리다이렉트 대상 URL"
+   ],
+   "usage_basis": "link_only",
+   "refresh_hours": 720,
+   "retention_days": 365,
+   "unsupported_scope": "출판사 랜딩/전문 페이지 본문 일괄 수집",
+   "default_access_level": "paper_abstract"
+  },
+  {
+   "key": "nlk_catalog",
+   "name": "국립중앙도서관 서지 (ISBN)",
+   "kind": "catalog",
+   "support_level": "limited",
+   "domains": [
+    "nl.go.kr",
+    "www.nl.go.kr"
+   ],
+   "access_method": "공개 서지 페이지/OpenAPI. OpenAPI는 인증키 필요 — 키 미구성",
+   "collectable_fields": [
+    "ISBN",
+    "출판사",
+    "발행연도",
+    "쪽수",
+    "저자 표기"
+   ],
+   "usage_basis": "metadata_only",
+   "refresh_hours": 720,
+   "retention_days": 730,
+   "unsupported_scope": "인증키가 필요한 OpenAPI 대량 조회(키 없음), 로그인 영역",
+   "credential_status": "not_configured",
+   "default_access_level": "book_intro"
+  },
+  {
+   "key": "booker_library",
+   "name": "The Booker Prizes 공식 라이브러리",
+   "kind": "official_entry",
+   "support_level": "supported",
+   "domains": [
+    "thebookerprizes.com"
+   ],
+   "access_method": "공개 페이지 (robots 감사 ok), 필요 시 승인된 JS 렌더링",
+   "collectable_fields": [
+    "수상·후보 이력",
+    "연도",
+    "번역자",
+    "출판사"
+   ],
+   "usage_basis": "metadata_only",
+   "refresh_hours": 720,
+   "retention_days": 730,
+   "unsupported_scope": "에세이·인터뷰 전문",
+   "default_access_level": "book_intro"
+  },
+  {
+   "key": "press_robots_ok",
+   "name": "언론·문예지 (robots 감사 통과 호스트)",
+   "kind": "article",
+   "support_level": "supported",
+   "domains": [
+    "magazine.changbi.com"
+   ],
+   "domains_from_audit": "ok",
+   "access_method": "RSS·사이트맵·공개 기사 페이지, live robots.txt 재확인(우리 UA + GPTBot/ClaudeBot/CCBot/anthropic-ai/Google-Extended 중 하나라도 불허면 중단)",
+   "collectable_fields": [
+    "제목",
+    "발행일",
+    "매체",
+    "URL",
+    "기사 내 근거 위치",
+    "편집자 요약(우리 문장)"
+   ],
+   "usage_basis": "quote_le12",
+   "refresh_hours": 24,
+   "retention_days": 365,
+   "unsupported_scope": "기사 전문 저장·게시, 12자 초과 인용, 유료 구독 영역, 댓글",
+   "default_access_level": "press_article"
+  },
+  {
+   "key": "press_ai_blocked",
+   "name": "AI 크롤링 차단 언론·서점 (robots 감사 BLOCKS-AI)",
+   "kind": "article",
+   "support_level": "unsupported",
+   "domains": [
+    "www.yna.co.kr"
+   ],
+   "domains_from_audit": "BLOCKS-AI",
+   "access_method": "수집 안 함. 과거 편집자가 확인한 '링크만' 인용(bare citation)만 유지",
+   "collectable_fields": [],
+   "usage_basis": "link_only",
+   "refresh_hours": null,
+   "retention_days": 365,
+   "unsupported_scope": "신규 수집 전부(본문·메타 자동 조회 포함). 차단 우회 시도 없음",
+   "default_access_level": "press_article"
+  },
+  {
+   "key": "kci_journal",
+   "name": "KCI 학술지 공개 초록 페이지",
+   "kind": "paper",
+   "support_level": "limited",
+   "domains": [
+    "journal.kci.go.kr"
+   ],
+   "access_method": "승인 도메인의 공개 초록 페이지, robots 허용 경로만. www.kci.go.kr·dbpia는 정책상 제외",
+   "collectable_fields": [
+    "논문 제목",
+    "초록(비공개 수집함에만)",
+    "학술지·권호",
+    "저자명"
+   ],
+   "usage_basis": "metadata_only",
+   "refresh_hours": 720,
+   "retention_days": 365,
+   "unsupported_scope": "www.kci.go.kr, dbpia.co.kr, 논문 전문",
+   "default_access_level": "paper_abstract"
+  },
+  {
+   "key": "platform_public_cover",
+   "name": "웹소설·웹툰 플랫폼 공개 작품 표지/소개",
+   "kind": "catalog",
+   "support_level": "limited",
+   "domains": [
+    "page.kakao.com",
+    "novel.munpia.com",
+    "series.naver.com",
+    "comic.naver.com",
+    "webtoon.kakao.com",
+    "www.webtoons.com"
+   ],
+   "access_method": "승인 도메인 + robots 허용 공개 표지·작품 소개 1페이지만",
+   "collectable_fields": [
+    "작품명",
+    "연재처",
+    "연재 상태",
+    "공개 소개 문구 메타"
+   ],
+   "usage_basis": "metadata_only",
+   "refresh_hours": 168,
+   "retention_days": 365,
+   "unsupported_scope": "/webtoon/detail·/viewer/ 본문, 로그인·결제 영역, 댓글·평점",
+   "default_access_level": "book_intro"
+  },
+  {
+   "key": "naver_blog_booking",
+   "name": "네이버 블로그·예약·지도",
+   "kind": "social",
+   "support_level": "unsupported",
+   "domains": [
+    "blog.naver.com",
+    "rss.blog.naver.com",
+    "booking.naver.com",
+    "map.naver.com",
+    "pcmap.place.naver.com"
+   ],
+   "access_method": "수집 안 함 (robots가 AI 수집 차단)",
+   "collectable_fields": [],
+   "usage_basis": "link_only",
+   "refresh_hours": null,
+   "retention_days": 0,
+   "unsupported_scope": "전부",
+   "default_access_level": "press_article"
+  },
+  {
+   "key": "other_blocked_policy",
+   "name": "정책 제외 사이트 (DC인사이드·DBpia 등)",
+   "kind": "social",
+   "support_level": "unsupported",
+   "domains": [
+    "dcinside.com",
+    "dbpia.co.kr",
+    "www.kci.go.kr"
+   ],
+   "access_method": "수집 안 함",
+   "collectable_fields": [],
+   "usage_basis": "link_only",
+   "refresh_hours": null,
+   "retention_days": 0,
+   "unsupported_scope": "전부",
+   "default_access_level": "press_article"
+  },
+  {
+   "key": "instagram_graph_api",
+   "name": "Instagram 공식 API (Graph API: 비즈니스 계정 연결, oEmbed)",
+   "kind": "social",
+   "support_level": "unsupported",
+   "domains": [
+    "graph.facebook.com",
+    "graph.instagram.com"
+   ],
+   "access_method": "Meta 공식 Graph API. 앱 등록·앱 검수·접근 토큰 필요. 현재 자격 미구성이라 비활성",
+   "collectable_fields": [
+    "(활성화 시) 연결한 우리 비즈니스 계정의 미디어 캡션·퍼마링크·게시시각",
+    "(활성화 시) 공개 비즈니스/크리에이터 계정 business_discovery 메타",
+    "(활성화 시) 공개 게시물 oEmbed"
+   ],
+   "usage_basis": "metadata_only",
+   "refresh_hours": 24,
+   "retention_days": 90,
+   "unsupported_scope": "현재 전부(자격 없음). 활성화에는 '계정 연결'이 필요하므로 준태님 승인 후에만. 개인(비전문가) 계정·비공개 계정·DM·스토리·팔로워 목록은 공식 API로도 범위 밖",
+   "credential_status": "not_configured",
+   "requires_user_approval": "계정 연결",
+   "default_access_level": "press_article"
+  },
+  {
+   "key": "instagram_public_pages",
+   "name": "Instagram 공개 웹 페이지 자동 수집",
+   "kind": "social",
+   "support_level": "unsupported",
+   "domains": [
+    "instagram.com",
+    "www.instagram.com"
+   ],
+   "access_method": "수집 안 함. instagram.com/robots.txt가 '명시적 서면 허가 없는 자동 수집 금지'를 선언하고 AI 크롤러를 차단하며, 정책 차단 호스트로 등록됨. 로그인 벽·행동 위장·계정/프록시 회전으로 우회하지 않는다",
+   "collectable_fields": [],
+   "usage_basis": "link_only",
+   "refresh_hours": null,
+   "retention_days": 0,
+   "unsupported_scope": "자동 수집 전부. 이 항목은 미지원으로 기록만 한다",
+   "default_access_level": "press_article"
+  },
+  {
+   "key": "manual_clip_extension",
+   "name": "수동 담기 크롬 확장 (activeTab, 사람이 누를 때만)",
+   "kind": "clip",
+   "support_level": "limited",
+   "domains": [
+    "*"
+   ],
+   "access_method": "사람이 보고 있는 페이지에서 '이 자료 담기'를 눌렀을 때만 동작. 인스타 게시물도 사람이 직접 열어 본 것을 담는 경우에 한해 가능(자동 순회·예약 없음)",
+   "collectable_fields": [
+    "페이지 제목",
+    "URL",
+    "선택 텍스트(PII 필터 통과 후)",
+    "게시 시각 메타"
+   ],
+   "usage_basis": "quote_le12",
+   "refresh_hours": null,
+   "retention_days": 180,
+   "unsupported_scope": "무인 수집, 로그인 정보·입력창·댓글·DM, 페이지 전체 덤프",
+   "default_access_level": "press_article"
+  },
+  {
+   "key": "internal_site_records",
+   "name": "꼴릿 사이트 내부 기록 (works.json·posts.json)",
+   "kind": "internal",
+   "support_level": "supported",
+   "domains": [
+    "goallit.soulbound.co.kr"
+   ],
+   "access_method": "로컬 파일 읽기",
+   "collectable_fields": [
+    "작품 서지 단서",
+    "미확인 목록",
+    "에세이 근거 묶음 메타"
+   ],
+   "usage_basis": "own_work",
+   "refresh_hours": 24,
+   "retention_days": null,
+   "unsupported_scope": "내부 기록만으로는 '확인된 사실'이 되지 않음(외부 출처 필요)",
+   "default_access_level": "book_intro"
+  },
+  {
+   "key": "unregistered",
+   "name": "레지스트리에 없는 호스트",
+   "kind": "article",
+   "support_level": "unsupported",
+   "domains": [],
+   "access_method": "robots 감사를 거쳐 등록되기 전까지 수집 안 함",
+   "collectable_fields": [],
+   "usage_basis": "link_only",
+   "refresh_hours": null,
+   "retention_days": 365,
+   "unsupported_scope": "등록 전 전부",
+   "default_access_level": "press_article"
+  }
+ ]
 }

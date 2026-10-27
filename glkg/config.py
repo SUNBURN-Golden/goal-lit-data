@@ -32,6 +32,7 @@ STAGE_DAILY_CAPS = {
     "history": {"rows": 5000},
     "recompute": {"rows": 50000},
     "quality": {"rows": 50000},
+    "parse": {"rows": 50000},
 }
 AI_CALLS_DAILY_CAP = 0  # 비용 상한: 현재 0 (AI 추론 자동 생성 안 함)
 
