@@ -16,6 +16,7 @@ REGISTRY_PATH = REPO_DIR / "sources" / "registry.json"
 # 기존 규칙 유지 (준태님 확정 10/23): 도메인 동시 1 · 5초 · 일 500/200 · 링크 깊이 2 · 자동게시 off
 MAX_DAILY_DISCOVERED = 500
 MAX_DAILY_FETCHED = 200
+LEGACY_FETCH_SHARE = 40   # 기존 수집기(glkg fetch 단계)가 쓸 수 있는 하루 몫. 나머지(160+)는 능동 수집 봇 몫이라 레거시가 예산을 다 먹지 못한다
 MAX_CONCURRENT_PER_DOMAIN = 1
 MIN_DOMAIN_INTERVAL_SEC = 5.0
 MAX_LINK_DEPTH = 2
@@ -24,7 +25,7 @@ AUTO_PUBLISH_TO_SITE = False
 # 파이프라인 단계별 일일 상한(요청·비용). AI(LLM) 호출은 기본 0 — 규칙 기반 추출만 쓴다.
 STAGE_DAILY_CAPS = {
     "discover": {"requests": 100},
-    "fetch": {"requests": MAX_DAILY_FETCHED, "discovered": MAX_DAILY_DISCOVERED},
+    "fetch": {"requests": LEGACY_FETCH_SHARE, "discovered": MAX_DAILY_DISCOVERED},
     "detect": {"requests": 200},
     "extract": {"rows": 5000},
     "resolve": {"rows": 5000},
