@@ -1,0 +1,5 @@
+{
+  "ok-news.test": {"status": "ok", "ai": [], "star_blocks_all": false},
+  "open-no-rules.test": {"status": "no-robots-rules", "ai": [], "star_blocks_all": false},
+  "blocked-news.test": {"status": "BLOCKS-AI", "ai": ["gptbot"], "star_blocks_all": false}
+}
