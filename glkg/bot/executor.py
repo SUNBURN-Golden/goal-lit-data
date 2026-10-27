@@ -155,7 +155,7 @@ class FetchExecutor:
             self._log(url, "unchanged", "same content hash", method, resp.status, budget_class)
             return FetchResult("unchanged", doc_id=prev["doc_id"], content=content, ctype=ctype, method=method, kind=kind, status=resp.status, registry_key=pol["registry_key"])
         now = now_iso()
-        doc_id = "doc_" + h[:16]
+        doc_id = "doc_" + H.sha256((canon + "|" + h).encode())[:16]   # URL 이 다르면 본문이 같아도 다른 문서(미러·별칭)
         body = storable_body(pol)
         path = self._store(doc_id, content) if body else None
         days = pol.get("retention_days") or 365

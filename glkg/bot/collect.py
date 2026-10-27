@@ -6,7 +6,7 @@ from .executor import BudgetExhausted, FetchExecutor, FetchResult
 from . import parser
 
 
-def collect(conn, ex: FetchExecutor, url: str, budget_class: str, origin: str = "", trial: bool = False, hint_work_id: Optional[str] = None):
+def collect(conn, ex: FetchExecutor, url: str, budget_class: str, origin: str = "", trial: bool = False, hint_work_id: Optional[str] = None, on_done=None):
     """(FetchResult, parse_stats|None)"""
     if not conn.in_transaction:
         conn.execute("BEGIN")
@@ -21,6 +21,8 @@ def collect(conn, ex: FetchExecutor, url: str, budget_class: str, origin: str = 
             from . import EXTRACTOR_VERSION
             if d and d["parsed_version"] != EXTRACTOR_VERSION:
                 stats = parser.parse_document(conn, res.doc_id, res.content, res.kind, url, res.ctype, ex.reg, hint_work_id)
+        if on_done:
+            on_done(conn, res, stats)   # 작업 상태 갱신·후속 질의 생성도 같은 트랜잭션 → 죽어도 '가져왔는데 작업이 안 끝남' 상태가 남지 않는다
         conn.execute("RELEASE collect")
         conn.commit()
         return res, stats
