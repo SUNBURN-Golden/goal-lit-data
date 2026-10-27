@@ -32,9 +32,9 @@ def prov(allow=STATUSES, require_evidence_for_confirmed=True):
 
 TABLES = []  # (name, immutable_cols, status_check_allow)
 
-def t(name, body, immutable, allow=STATUSES):
+def t(name, body, immutable, allow=STATUSES, extra=""):
     TABLES.append((name, immutable, allow))
-    return f"CREATE TABLE {name} (\n{body},\n{prov(allow)}\n);\nCREATE INDEX idx_{name}_status ON {name}(epistemic_status);\n"
+    return f"CREATE TABLE {name} (\n{body},\n{prov(allow)}{extra}\n);\nCREATE INDEX idx_{name}_status ON {name}(epistemic_status);\n"
 
 PROV_IMMUTABLE = ["source_id", "source_url", "evidence_id", "collected_at", "valid_from", "valid_from_precision", "recorded_at", "usage_basis", "legacy_inbox_id"]
 
@@ -147,14 +147,10 @@ CREATE INDEX idx_evidence_source ON evidence_passage(source_id);
 sql.append(t("edition", """    edition_id TEXT PRIMARY KEY,
     work_id TEXT NOT NULL REFERENCES work(work_id),
     isbn TEXT,
-    publisher TEXT,
-    translator TEXT,
-    language TEXT,
-    pub_year TEXT,
-    pages INTEGER,
     label TEXT NOT NULL DEFAULT '',
     identity_status TEXT NOT NULL DEFAULT 'provisional' CHECK (identity_status IN ('isbn_matched','provisional','confirmed'))""",
-    ["work_id", "isbn", "publisher", "translator", "language", "pub_year", "pages", "label"] + PROV_IMMUTABLE))
+    ["work_id", "isbn", "label"] + PROV_IMMUTABLE))
+# 판본의 속성(출판사·연도·쪽수·번역자·언어)은 bib_fact(subject_type='edition') 행으로, 출처마다 따로 쌓는다.
 
 sql.append(t("bib_fact", """    fact_id TEXT PRIMARY KEY,
     subject_type TEXT NOT NULL CHECK (subject_type IN ('work','edition')),
@@ -165,14 +161,16 @@ sql.append(t("bib_fact", """    fact_id TEXT PRIMARY KEY,
     ["subject_type", "subject_id", "predicate", "value_text"] + PROV_IMMUTABLE))
 
 sql.append(t("author_statement", """    statement_id TEXT PRIMARY KEY,
-    author_id TEXT NOT NULL REFERENCES author(author_id),
+    author_id TEXT REFERENCES author(author_id),
+    author_name_raw TEXT NOT NULL DEFAULT '',
     work_id TEXT REFERENCES work(work_id),
     summary TEXT NOT NULL DEFAULT '',
     summary_withheld_reason TEXT NOT NULL DEFAULT '',
     statement_date TEXT,
     statement_medium TEXT NOT NULL DEFAULT '',
     source_tier TEXT NOT NULL DEFAULT 'unknown' CHECK (source_tier IN ('primary','secondary','unknown'))""",
-    ["author_id", "work_id", "summary", "statement_date", "statement_medium", "source_tier"] + PROV_IMMUTABLE))
+    ["author_id", "author_name_raw", "work_id", "summary", "statement_date", "statement_medium", "source_tier"] + PROV_IMMUTABLE,
+    extra=",\n    CHECK (author_id IS NOT NULL OR epistemic_status = 'unverified')"))
 
 NOCONF = "'source_claim','ai_inference','unverified'"
 sql.append(t("interpretation", """    interp_id TEXT PRIMARY KEY,
@@ -202,8 +200,9 @@ sql.append(t("interpretation_relation", """    rel_id TEXT PRIMARY KEY,
     a_interp_id TEXT NOT NULL REFERENCES interpretation(interp_id),
     b_interp_id TEXT NOT NULL REFERENCES interpretation(interp_id),
     relation TEXT NOT NULL CHECK (relation IN ('opposes','supports','responds_to'))""",
-    ["a_interp_id", "b_interp_id", "relation"] + PROV_IMMUTABLE, "'source_claim','unverified'"))
-sql[-1] = sql[-1].replace("\n);\nCREATE INDEX idx_interpretation_relation_status", ",\n    CHECK (a_interp_id <> b_interp_id)\n);\nCREATE INDEX idx_interpretation_relation_status")
+    ["a_interp_id", "b_interp_id", "relation"] + PROV_IMMUTABLE, "'source_claim','unverified'",
+    extra=",\n    CHECK (a_interp_id <> b_interp_id)"))
+
 
 sql.append("""CREATE TABLE ai_inference (
     inference_id TEXT PRIMARY KEY,
@@ -270,7 +269,7 @@ CREATE TABLE legacy_map (
     kg_id TEXT NOT NULL,
     content_hash TEXT NOT NULL,
     mapped_at TEXT NOT NULL,
-    PRIMARY KEY (inbox_id, kg_table, kg_id)
+    PRIMARY KEY (inbox_id, kg_table, kg_id, content_hash)
 );
 """)
 (OUT / "001_ontology.sql").write_text("\n".join(sql), encoding="utf-8")
