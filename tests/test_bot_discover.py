@@ -201,3 +201,20 @@ def test_same_body_at_two_urls_makes_two_documents_not_a_crash(env):
     a = ex.fetch(Q.ol_subject_url("korean_fiction", 2001), "discovery")
     b = ex.fetch(Q.ol_subject_url("korean_fiction", 2002), "discovery")
     assert a.outcome == b.outcome == "ok" and a.doc_id != b.doc_id
+
+
+def test_budget_counts_legacy_collector_usage_from_inbox_counter(env, tmp_path, monkeypatch):
+    import sqlite3
+    from glkg.timeutil import today
+    kg, reg, tr, mk, tmp = env
+    inbox = tmp_path / "inbox.db"
+    c = sqlite3.connect(inbox)
+    c.execute("CREATE TABLE daily_counters(date_kst TEXT, brand TEXT, discovered_count INT, fetched_count INT)")
+    c.execute("INSERT INTO daily_counters VALUES(?,?,?,?)", (today(), "goal-lit", 0, 71))
+    c.commit(); c.close()
+    monkeypatch.setattr(config, "INBOX_DB_PATH", inbox)
+    b = Budget(kg)
+    assert b.legacy_used() == 71 and b.total_used() == 71
+    assert b.available("backfill") == 120                      # 클래스 한도 안
+    b.take("backfill", 100)
+    assert b.available("backfill") == 20 and b.available("discovery") == 200 - 71 - 100     # 클래스 한도 안이어도 하루 합계 200 이 먼저 막는다

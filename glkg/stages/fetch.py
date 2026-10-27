@@ -23,7 +23,10 @@ class FetchStage(Stage):
         self.per_run = per_run
 
     def run_custom(self, ctx: Context):
-        allowed = min(self.per_run, ctx.remaining("requests"))
+        from ..bot.budget import Budget
+        bud = Budget(ctx.conn)
+        # 봇 3종과 같은 하루 200건을 나눠 쓴다: 남은 합계를 넘기지 않는다
+        allowed = min(self.per_run, ctx.remaining("requests"), max(0, bud.fetch_cap - bud.total_used()))
         if allowed <= 0:
             return {"budget_exhausted": "requests", "ran": 0}
         stats = self.runner(allowed) or {}
