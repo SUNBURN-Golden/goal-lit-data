@@ -38,6 +38,15 @@ class QualityStage(Stage):
         check("claim_without_collected_at", [r for t in CLAIM_TABLES for r in q(f"SELECT {TABLE_PK[t]} FROM {t} WHERE collected_at IS NULL OR collected_at=''")])
         check("ai_promoted_without_reviewer", q("SELECT inference_id FROM ai_inference WHERE review_state='promoted' AND (reviewed_by IS NULL OR promoted_to_id IS NULL)"))
         check("ai_inference_rows_present", q("SELECT inference_id FROM ai_inference WHERE epistemic_status<>'ai_inference'"))
+        # 문학 지식그래프
+        check("work_theme_claim_without_evidence", q("SELECT wt_id FROM work_theme WHERE epistemic_status='source_claim' AND (evidence_id IS NULL OR source_id IS NULL)"))
+        check("ai_theme_promoted", q("SELECT inference_id FROM ai_inference WHERE review_state='promoted' AND proposed_relation LIKE 'work_theme%'"))
+        check("opposes_missing_side", q(
+            """SELECT r.rel_id FROM interpretation_relation r LEFT JOIN interpretation a ON a.interp_id=r.a_interp_id LEFT JOIN interpretation b ON b.interp_id=r.b_interp_id
+               WHERE r.relation='opposes' AND r.recorded_to IS NULL AND (a.interp_id IS NULL OR b.interp_id IS NULL OR a.evidence_id IS NULL OR b.evidence_id IS NULL
+                 OR a.attributed_to_name='' OR b.attributed_to_name='')"""), enqueue=("interpretation_relation", "대립 해석 한쪽의 근거/작성자 없음"))
+        check("critique_without_evidence", q("SELECT interp_id FROM interpretation WHERE recorded_to IS NULL AND kind IN ('critique','counter','interpretation') AND evidence_id IS NULL"), "warn")
+        check("registry_missing_rights_or_retention", q("SELECT registry_key FROM source_registry WHERE rights_note='' OR (retention_days IS NULL AND support_level<>'unsupported')"), "warn")
         # 권리·정책
         check("claims_from_policy_blocked_sources", q(
             """SELECT DISTINCT s.source_id FROM source s JOIN source_registry r ON r.registry_key=s.registry_key

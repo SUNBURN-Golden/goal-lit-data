@@ -41,7 +41,8 @@
    "refresh_hours": 168,
    "retention_days": 365,
    "unsupported_scope": "논문 전문, 인용 네트워크 전수, 초록 문장의 복사·게시",
-   "default_access_level": "paper_abstract"
+   "default_access_level": "paper_abstract",
+   "rights_note": "서지·메타데이터만 저장, 본문 저장 안 함"
   },
   {
    "key": "wikidata_api",
@@ -59,7 +60,8 @@
    "refresh_hours": 168,
    "retention_days": 0,
    "unsupported_scope": "API·SPARQL 자동 수집 전부(robots 불허)",
-   "default_access_level": "book_intro"
+   "default_access_level": "book_intro",
+   "rights_note": "링크만"
   },
   {
    "key": "crossref_api",
@@ -81,7 +83,8 @@
    "refresh_hours": 168,
    "retention_days": 365,
    "unsupported_scope": "논문 전문, 초록 문장 복사",
-   "default_access_level": "paper_abstract"
+   "default_access_level": "paper_abstract",
+   "rights_note": "서지·메타데이터만 저장, 본문 저장 안 함"
   },
   {
    "key": "google_books_api",
@@ -99,7 +102,8 @@
    "retention_days": 0,
    "unsupported_scope": "키 없이는 전부",
    "default_access_level": "paper_abstract",
-   "credential_status": "API 키 미구성(발급은 승인 필요)"
+   "credential_status": "API 키 미구성(발급은 승인 필요)",
+   "rights_note": "링크만"
   },
   {
    "key": "openlibrary_api",
@@ -123,7 +127,8 @@
    "refresh_hours": 168,
    "retention_days": 365,
    "unsupported_scope": "/search·/api 경로, 대량 덤프, 편집(쓰기), 영문 제목 번역서를 한글 작품과 제목 유사도로 합치는 것",
-   "default_access_level": "book_intro"
+   "default_access_level": "book_intro",
+   "rights_note": "서지·메타데이터만 저장, 본문 저장 안 함"
   },
   {
    "key": "doi_resolver",
@@ -142,7 +147,8 @@
    "refresh_hours": 720,
    "retention_days": 365,
    "unsupported_scope": "출판사 랜딩/전문 페이지 본문 일괄 수집",
-   "default_access_level": "paper_abstract"
+   "default_access_level": "paper_abstract",
+   "rights_note": "링크만"
   },
   {
    "key": "nlk_catalog",
@@ -166,7 +172,8 @@
    "retention_days": 730,
    "unsupported_scope": "인증키가 필요한 OpenAPI 대량 조회(키 없음), 로그인 영역",
    "credential_status": "not_configured",
-   "default_access_level": "book_intro"
+   "default_access_level": "book_intro",
+   "rights_note": "서지·메타데이터만 저장, 본문 저장 안 함"
   },
   {
    "key": "booker_library",
@@ -187,7 +194,8 @@
    "refresh_hours": 720,
    "retention_days": 730,
    "unsupported_scope": "에세이·인터뷰 전문",
-   "default_access_level": "book_intro"
+   "default_access_level": "book_intro",
+   "rights_note": "서지·메타데이터만 저장, 본문 저장 안 함"
   },
   {
    "key": "press_robots_ok",
@@ -211,7 +219,8 @@
    "refresh_hours": 24,
    "retention_days": 365,
    "unsupported_scope": "기사 전문 저장·게시, 12자 초과 인용, 유료 구독 영역, 댓글",
-   "default_access_level": "press_article"
+   "default_access_level": "press_article",
+   "rights_note": "인용 12자 이하"
   },
   {
    "key": "press_ai_blocked",
@@ -228,7 +237,8 @@
    "refresh_hours": null,
    "retention_days": 365,
    "unsupported_scope": "신규 수집 전부(본문·메타 자동 조회 포함). 차단 우회 시도 없음",
-   "default_access_level": "press_article"
+   "default_access_level": "press_article",
+   "rights_note": "링크만"
   },
   {
    "key": "kci_journal",
@@ -249,7 +259,8 @@
    "refresh_hours": 720,
    "retention_days": 365,
    "unsupported_scope": "www.kci.go.kr, dbpia.co.kr, 논문 전문",
-   "default_access_level": "paper_abstract"
+   "default_access_level": "paper_abstract",
+   "rights_note": "서지·메타데이터만 저장, 본문 저장 안 함"
   },
   {
    "key": "platform_public_cover",
@@ -275,7 +286,8 @@
    "refresh_hours": 168,
    "retention_days": 365,
    "unsupported_scope": "/webtoon/detail·/viewer/ 본문, 로그인·결제 영역, 댓글·평점",
-   "default_access_level": "book_intro"
+   "default_access_level": "book_intro",
+   "rights_note": "서지·메타데이터만 저장, 본문 저장 안 함"
   },
   {
    "key": "naver_blog_booking",
@@ -295,7 +307,8 @@
    "refresh_hours": null,
    "retention_days": 0,
    "unsupported_scope": "전부",
-   "default_access_level": "press_article"
+   "default_access_level": "press_article",
+   "rights_note": "링크만"
   },
   {
    "key": "other_blocked_policy",
@@ -313,7 +326,8 @@
    "refresh_hours": null,
    "retention_days": 0,
    "unsupported_scope": "전부",
-   "default_access_level": "press_article"
+   "default_access_level": "press_article",
+   "rights_note": "링크만"
   },
   {
    "key": "instagram_graph_api",
@@ -336,7 +350,8 @@
    "unsupported_scope": "현재 전부(자격 없음). 활성화에는 '계정 연결'이 필요하므로 준태님 승인 후에만. 개인(비전문가) 계정·비공개 계정·DM·스토리·팔로워 목록은 공식 API로도 범위 밖",
    "credential_status": "not_configured",
    "requires_user_approval": "계정 연결",
-   "default_access_level": "press_article"
+   "default_access_level": "press_article",
+   "rights_note": "서지·메타데이터만 저장, 본문 저장 안 함"
   },
   {
    "key": "instagram_public_pages",
@@ -352,8 +367,9 @@
    "usage_basis": "link_only",
    "refresh_hours": null,
    "retention_days": 0,
-   "unsupported_scope": "자동 수집 전부. 이 항목은 미지원으로 기록만 한다",
-   "default_access_level": "press_article"
+   "unsupported_scope": "자동 수집 전부. 이 항목은 미지원으로 기록만 한다 | 사칭·계정 바꿔치기·프록시/IP 회전·로그인 우회는 어떤 경우에도 하지 않음",
+   "default_access_level": "press_article",
+   "rights_note": "링크만"
   },
   {
    "key": "manual_clip_extension",
@@ -374,7 +390,8 @@
    "refresh_hours": null,
    "retention_days": 180,
    "unsupported_scope": "무인 수집, 로그인 정보·입력창·댓글·DM, 페이지 전체 덤프",
-   "default_access_level": "press_article"
+   "default_access_level": "press_article",
+   "rights_note": "인용 12자 이하"
   },
   {
    "key": "internal_site_records",
@@ -394,7 +411,8 @@
    "refresh_hours": 24,
    "retention_days": null,
    "unsupported_scope": "내부 기록만으로는 '확인된 사실'이 되지 않음(외부 출처 필요)",
-   "default_access_level": "book_intro"
+   "default_access_level": "book_intro",
+   "rights_note": "자체 저작물"
   },
   {
    "key": "unregistered",
@@ -408,7 +426,32 @@
    "refresh_hours": null,
    "retention_days": 365,
    "unsupported_scope": "등록 전 전부",
-   "default_access_level": "press_article"
+   "default_access_level": "press_article",
+   "rights_note": "링크만"
+  },
+  {
+   "key": "nlk_lod_sparql",
+   "name": "국립중앙도서관 LOD SPARQL (키 없음)",
+   "kind": "catalog",
+   "support_level": "supported",
+   "domains": [
+    "lod.nl.go.kr"
+   ],
+   "access_method": "공개 SPARQL 엔드포인트 https://lod.nl.go.kr/sparql (인증키 불필요). 2026-10-28 응답 확인",
+   "collectable_fields": [
+    "ISBN",
+    "표제",
+    "저자(전거)",
+    "발행처",
+    "발행연도",
+    "KDC"
+   ],
+   "usage_basis": "metadata_only",
+   "refresh_hours": 720,
+   "retention_days": 730,
+   "unsupported_scope": "대량 덤프·고빈도 조회(일일 상한 공유), 본문",
+   "default_access_level": "book_intro",
+   "rights_note": "서지·메타데이터만 저장, 본문 저장 안 함"
   }
  ]
 }

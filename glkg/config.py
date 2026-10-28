@@ -33,6 +33,7 @@ STAGE_DAILY_CAPS = {
     "history": {"rows": 5000},
     "recompute": {"rows": 50000},
     "quality": {"rows": 50000},
+    "themes": {"rows": 100000},
     "parse": {"rows": 50000},
     "seek": {"rows": 100000},     # 질의 생성은 DB 행만 추가(네트워크 없음). 후보 상한은 Budget.discovered 가 센다
     "assess": {"rows": 100000},   # 요청은 Budget(bot:discovery) 쪽에서 센다

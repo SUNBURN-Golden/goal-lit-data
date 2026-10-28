@@ -26,6 +26,7 @@ module.exports = {
     mk("fetch", 1800, 25),    // 기존 수집기 증분 실행(goallit-auto 대체, 같은 일일 200건 공유)
     mk("detect", 1800, 30),
     mk("extract", 900, 35),
+    mk("themes", 900, 38),    // 주제·대립 해석(근거 있는 해석만, 네트워크 없음)
     mk("resolve", 900, 40),
     mk("verify", 900, 45),
     mk("history", 900, 50),
