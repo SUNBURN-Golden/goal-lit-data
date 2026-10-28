@@ -70,7 +70,8 @@ def main(ch_path, prop_path):
             print(f"{url} (CI 실패 → 병합 안 함)")
             return 4
         sh("gh", "pr", "merge", url, "--merge", "--delete-branch", cwd=WT)
-        sh("git", "pull", "-q", "--ff-only", cwd=RUN, check=False)
+        sh("git", "fetch", "-q", "origin", cwd=RUN, check=False)
+        sh("git", "checkout", "-q", "--detach", "origin/main", cwd=RUN, check=False)  # 실행 체크아웃은 분리 HEAD
         print(f"{url} merged")
         return 0
     finally:
