@@ -433,25 +433,26 @@
    "key": "nlk_lod_sparql",
    "name": "국립중앙도서관 LOD SPARQL (키 없음)",
    "kind": "catalog",
-   "support_level": "supported",
+   "support_level": "unsupported",
    "domains": [
     "lod.nl.go.kr"
    ],
-   "access_method": "공개 SPARQL 엔드포인트 https://lod.nl.go.kr/sparql (인증키 불필요). 2026-10-28 응답 확인",
-   "collectable_fields": [
+   "access_method": "공개 SPARQL 엔드포인트 https://lod.nl.go.kr/sparql (인증키 불필요). 2026-10-28 robots.txt 확인: 'User-agent: * / Disallow: / / Allow: /$' → /sparql 수집 불허. 우회하지 않음. robots 가 열리면 support_level 을 supported 로 되돌리면 gaps 가 바로 질의를 넣는다(improve 단계가 매일 robots 를 다시 확인).",
+   "collectable_fields": [],
+   "usage_basis": "metadata_only",
+   "refresh_hours": 720,
+   "retention_days": 730,
+   "unsupported_scope": "robots.txt 가 / 이하 전부 불허(루트만 허용) — 현재 전부",
+   "default_access_level": "book_intro",
+   "rights_note": "서지·메타데이터만 저장, 본문 저장 안 함",
+   "collectable_fields_when_open": [
     "ISBN",
     "표제",
     "저자(전거)",
     "발행처",
     "발행연도",
     "KDC"
-   ],
-   "usage_basis": "metadata_only",
-   "refresh_hours": 720,
-   "retention_days": 730,
-   "unsupported_scope": "대량 덤프·고빈도 조회(일일 상한 공유), 본문",
-   "default_access_level": "book_intro",
-   "rights_note": "서지·메타데이터만 저장, 본문 저장 안 함"
+   ]
   }
  ]
 }

@@ -194,6 +194,27 @@ def crossref(doc: Dict[str, Any]) -> List[Field]:
     return out
 
 
+# ---------- 국립중앙도서관 LOD (SPARQL JSON) ----------
+def nlk_lod(doc: Dict[str, Any]) -> List[Field]:
+    out: List[Field] = []
+    for i, b in enumerate(((doc.get("results") or {}).get("bindings") or [])[:10]):
+        v = lambda k: ((b.get(k) or {}).get("value") or "")
+        loc = f"results.bindings[{i}]"
+        title = v("title")
+        if not HANGUL.search(title):
+            continue
+        _add(out, "doc_kind", "book_record", loc)
+        _add(out, "title", title, f"{loc}.title")
+        isbn = isbn_ok(v("isbn"))
+        _add(out, "isbn", isbn, f"{loc}.isbn")
+        ed = "ed_" if isbn else ""
+        y = re.search(r"(1[89]|20)\d\d", v("year"))
+        _add(out, ed + "pub_year", y.group(0) if y else "", f"{loc}.year")
+        _add(out, ed + "publisher", v("publisher"), f"{loc}.publisher")
+        _add(out, "author", v("creator") if not v("creator").startswith("http") else "", f"{loc}.creator")
+    return out
+
+
 # ---------- HTML ----------
 def html_meta(html: str, url: str = "") -> List[Field]:
     from bs4 import BeautifulSoup
@@ -366,6 +387,8 @@ def extract_by_kind(kind: str, content: bytes, url: str, ctype: str) -> Tuple[st
         return "ol_author_works", ol_author_works(json.loads(content), url)
     if kind == "crossref":
         return "crossref", crossref(json.loads(content))
+    if kind == "nlk_lod":
+        return "nlk_lod", nlk_lod(json.loads(content))
     if kind == "pdf":
         return "pdf", pdf_fields(content)
     if kind == "image":

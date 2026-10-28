@@ -45,6 +45,8 @@ def extractor_kind(url: str, method: str, ctype: str) -> str:
         return "openalex"
     if host == "api.crossref.org":
         return "crossref"
+    if host == "lod.nl.go.kr":
+        return "nlk_lod"
     if host == "openlibrary.org":
         if "/subjects/" in url:
             return "ol_subject"
@@ -69,6 +71,20 @@ def method_for(ctype: str, content: bytes) -> str:
     if ctype.startswith("image/"):
         return "image"
     return ""
+
+
+BACKOFF_PATH = Path(__file__).resolve().parent.parent.parent / "sources" / "backoff.json"
+
+
+def domain_backoff(host: str, path: Optional[Path] = None) -> str:
+    """sources/backoff.json 에 아직 안 끝난 백오프가 있으면 그 종료 시각, 없으면 ''."""
+    import json as _j
+    try:
+        d = _j.loads(Path(path or BACKOFF_PATH).read_text()).get("domains", {})
+    except (OSError, ValueError):
+        return ""
+    until = (d.get(host) or {}).get("until") or ""
+    return until if until > now_iso() else ""
 
 
 class FetchExecutor:
@@ -108,6 +124,11 @@ class FetchExecutor:
         if not pol["may_collect"] and not (trial and pol["trial_allowed"]):
             self._log(url, "failed_policy", f"{pol['registry_key']}:{pol['support_level']}:{pol['via']}", cls=budget_class)
             return FetchResult("failed_policy", pol["via"], registry_key=pol["registry_key"])
+        bo = domain_backoff(H.host_of(url))
+        if bo:
+            # 개선 단계가 연 PR 로 들어온 백오프(반복 실패 도메인 일시 중지). 요청하지 않는다.
+            self._log(url, "failed_policy", f"backoff_until:{bo}", cls=budget_class)
+            return FetchResult("failed_policy", "backoff", registry_key=pol["registry_key"])
         try:
             ok, why = self.gate.allowed(url)
         except H.BudgetGate:

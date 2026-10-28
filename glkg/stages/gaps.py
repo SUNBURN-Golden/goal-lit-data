@@ -10,7 +10,8 @@ class GapStage(Stage):
     name = "gaps"
     custom = True
 
-    def __init__(self, budget: Optional[Budget] = None, max_works: int = 200, expand_authors: int = 10):
+    def __init__(self, budget: Optional[Budget] = None, max_works: int = 200, expand_authors: int = 10, registry=None):
+        self._registry = registry
         self._budget = budget
         self.max_works = max_works
         self.expand_authors = expand_authors
@@ -19,8 +20,12 @@ class GapStage(Stage):
         conn = ctx.conn
         bud = self._budget or Budget(conn)
         st = {"works": 0, "opened": 0, "resolved": 0, "changed": 0, "reverse_queries": 0, "author_expansions": 0}
+        from ..registry import Registry
+        reg = self._registry or Registry()
+        nlk_ok = bool(reg.policy_for_url(Q.NLK_LOD).get("may_collect"))
+        st["nlk_lod_allowed"] = nlk_ok
         for r in conn.execute("SELECT work_id FROM work ORDER BY work_id LIMIT ?", (self.max_works,)).fetchall():
-            s = G.explore_work(conn, bud, r["work_id"])
+            s = G.explore_work(conn, bud, r["work_id"], nlk_lod_allowed=nlk_ok)
             st["works"] += 1
             st["opened"] += s["opened"]
             st["resolved"] += s["resolved"]
