@@ -9,6 +9,7 @@ INBOX_DB_PATH = Path(os.environ.get("GLKG_INBOX_DB", str(DATA_DIR / "goallit_inb
 LOCK_DIR = Path(os.environ.get("GLKG_LOCK_DIR", str(DATA_DIR / "kg_locks")))
 EXPORT_DIR = Path(os.environ.get("GLKG_EXPORT_DIR", str(DATA_DIR / "kg_export")))
 WORKS_JSON = Path(os.environ.get("GLKG_WORKS_JSON", "/workspace/lit-hub/site/content/works.json"))
+LEGACY_COLLECTOR_DIR = Path(os.environ.get("GLKG_LEGACY_DIR", "/workspace/lit-hub/collector"))
 MIGRATIONS_DIR = REPO_DIR / "schema" / "migrations"
 REGISTRY_PATH = REPO_DIR / "sources" / "registry.json"
 
@@ -27,7 +28,7 @@ STAGE_DAILY_CAPS = {
     "detect": {"requests": 200},
     "extract": {"rows": 5000},
     "resolve": {"rows": 5000},
-    "verify": {"rows": 5000},
+    "verify": {"rows": 50000},
     "history": {"rows": 5000},
     "recompute": {"rows": 50000},
     "quality": {"rows": 50000},

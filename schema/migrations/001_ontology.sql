@@ -108,11 +108,6 @@ CREATE TABLE edition (
     edition_id TEXT PRIMARY KEY,
     work_id TEXT NOT NULL REFERENCES work(work_id),
     isbn TEXT,
-    publisher TEXT,
-    translator TEXT,
-    language TEXT,
-    pub_year TEXT,
-    pages INTEGER,
     label TEXT NOT NULL DEFAULT '',
     identity_status TEXT NOT NULL DEFAULT 'provisional' CHECK (identity_status IN ('isbn_matched','provisional','confirmed')),
     source_id TEXT REFERENCES source(source_id),
@@ -164,7 +159,8 @@ CREATE INDEX idx_bib_fact_status ON bib_fact(epistemic_status);
 
 CREATE TABLE author_statement (
     statement_id TEXT PRIMARY KEY,
-    author_id TEXT NOT NULL REFERENCES author(author_id),
+    author_id TEXT REFERENCES author(author_id),
+    author_name_raw TEXT NOT NULL DEFAULT '',
     work_id TEXT REFERENCES work(work_id),
     summary TEXT NOT NULL DEFAULT '',
     summary_withheld_reason TEXT NOT NULL DEFAULT '',
@@ -187,7 +183,8 @@ CREATE TABLE author_statement (
     legacy_inbox_id TEXT,
     note TEXT NOT NULL DEFAULT '',
     CHECK (epistemic_status IN ('confirmed_fact','source_claim','ai_inference','unverified')),
-    CHECK (epistemic_status <> 'confirmed_fact' OR (source_id IS NOT NULL AND evidence_id IS NOT NULL))
+    CHECK (epistemic_status <> 'confirmed_fact' OR (source_id IS NOT NULL AND evidence_id IS NOT NULL)),
+    CHECK (author_id IS NOT NULL OR epistemic_status = 'unverified')
 );
 CREATE INDEX idx_author_statement_status ON author_statement(epistemic_status);
 
@@ -359,5 +356,5 @@ CREATE TABLE legacy_map (
     kg_id TEXT NOT NULL,
     content_hash TEXT NOT NULL,
     mapped_at TEXT NOT NULL,
-    PRIMARY KEY (inbox_id, kg_table, kg_id)
+    PRIMARY KEY (inbox_id, kg_table, kg_id, content_hash)
 );
