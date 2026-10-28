@@ -111,7 +111,7 @@ def test_registry_rights_and_instagram_scope(kg):
     assert rows["instagram_public_pages"]["support_level"] == "unsupported"
     assert "프록시" in rows["instagram_public_pages"]["unsupported_scope"]
     assert rows["manual_clip_extension"]["support_level"] == "limited"
-    assert rows["nlk_lod_sparql"]["support_level"] == "supported"
+    assert rows["nlk_lod_sparql"]["support_level"] == "unsupported"  # robots.txt Disallow: / (2026-10-28)
 
 
 def test_quality_checks_pass_on_clean_graph(kg, tmp_path):

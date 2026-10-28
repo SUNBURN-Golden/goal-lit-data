@@ -1,5 +1,6 @@
 """질의 생성기: 장르 × 연도 × 키워드 조합, 작품→판본, 작품→비평, 인용 확장. 모든 URL은 공개 API/허용 경로뿐이다."""
 import json
+import re
 import urllib.parse as up
 from typing import Dict, Iterable, List, Optional
 
@@ -85,3 +86,24 @@ def cr_book_url(title: str, author: str = "") -> str:
 
 def ol_author_works_url(author_key: str, limit: int = 50) -> str:
     return f"{OL}{author_key}/works.json?limit={limit}"
+
+
+NLK_LOD = "https://lod.nl.go.kr/sparql"
+
+
+def _sparql_lit(s: str) -> str:
+    return '"' + re.sub(r'["\\\n\r]', " ", s or "").strip()[:120] + '"'
+
+
+def nlk_lod_query(title: str) -> str:
+    """국립중앙도서관 LOD: 표제 정확 일치 → ISBN·발행처·발행연도. 어휘(dcterms/bibo/nlon)는 엔드포인트가 열리면 실응답으로 재확인해야 한다."""
+    return ("PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX bibo: <http://purl.org/ontology/bibo/> "
+            "PREFIX nlon: <http://lod.nl.go.kr/ontology/> "
+            "SELECT ?book ?title ?isbn ?publisher ?year ?creator WHERE { ?book dcterms:title ?title . "
+            f"FILTER(str(?title) = {_sparql_lit(title)}) "
+            "OPTIONAL { ?book bibo:isbn ?isbn } OPTIONAL { ?book nlon:publisher ?publisher } "
+            "OPTIONAL { ?book nlon:publicationYear ?year } OPTIONAL { ?book dcterms:creator ?creator } } LIMIT 10")
+
+
+def nlk_lod_url(title: str) -> str:
+    return NLK_LOD + "?" + up.urlencode({"query": nlk_lod_query(title), "format": "json"})

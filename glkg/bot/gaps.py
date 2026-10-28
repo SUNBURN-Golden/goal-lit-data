@@ -16,8 +16,8 @@ from ..timeutil import now_iso
 from . import queries as Q
 
 REQUIRED = ("title", "author", "pub_year", "publisher", "isbn")
-UNREACHABLE = {"nlk": "국립중앙도서관 API 키 필요(미보유)", "google_books": "Google Books 키 필요(할당 0)"}
-REVERSE_KINDS = ("gap_crossref", "gap_openalex")
+UNREACHABLE = {"nlk": "국립중앙도서관 API 키 필요(미보유)", "nlk_lod": "국립중앙도서관 LOD SPARQL: robots.txt 가 수집 불허(우회 안 함)", "google_books": "Google Books 키 필요(할당 0)"}
+REVERSE_KINDS = ("gap_crossref", "gap_openalex", "gap_nlk_lod")
 
 
 def filled_fields(conn, work_id: str) -> Dict[str, Optional[str]]:
@@ -47,7 +47,7 @@ def has_conflict(conn, work_id: str, field: str) -> bool:
 
 def reverse_queries(conn, work_id: str) -> List[dict]:
     return [dict(r) for r in conn.execute(
-        "SELECT kind, state FROM discovery_query WHERE kind IN ('gap_crossref','gap_openalex') AND json_extract(params_json,'$.work_hint')=?", (work_id,))]
+        "SELECT kind, state FROM discovery_query WHERE kind IN ('gap_crossref','gap_openalex','gap_nlk_lod') AND json_extract(params_json,'$.work_hint')=?", (work_id,))]
 
 
 def _text_doc_without_field(conn, work_id: str) -> bool:
@@ -72,7 +72,7 @@ def set_state(conn, gap_id: str, new: str, detail: str, resolved_by: str = "") -
     return True
 
 
-def explore_work(conn, budget, work_id: str, max_rounds: int = 2) -> Dict[str, int]:
+def explore_work(conn, budget, work_id: str, max_rounds: int = 2, nlk_lod_allowed: bool = False) -> Dict[str, int]:
     st = {"opened": 0, "resolved": 0, "changed": 0, "queries": 0}
     now = now_iso()
     fills = filled_fields(conn, work_id)
@@ -86,6 +86,10 @@ def explore_work(conn, budget, work_id: str, max_rounds: int = 2) -> Dict[str, i
             st["queries"] += 1
         if Q.enqueue_query(conn, budget, "gap_openalex", Q.oa_search_url(f'"{w["canonical_title"]}"'), f"gap openalex {w['canonical_title']}", "backfill", 50, origin="gap:" + ",".join(missing), work_hint=work_id):
             st["queries"] += 1
+        # 국립중앙도서관 LOD(키 없음): 출처 정책이 허용할 때만(robots 불허면 레지스트리가 unsupported → 질의 자체를 만들지 않는다)
+        if nlk_lod_allowed and any(f in missing for f in ("isbn", "publisher", "pub_year")):
+            if Q.enqueue_query(conn, budget, "gap_nlk_lod", Q.nlk_lod_url(w["canonical_title"]), f"gap nlk_lod {w['canonical_title']}", "backfill", 60, origin="gap:" + ",".join(missing), work_hint=work_id):
+                st["queries"] += 1
     rq = reverse_queries(conn, work_id)
     pending = any(q["state"] == "queued" for q in rq)
     done = [q for q in rq if q["state"] == "done"]

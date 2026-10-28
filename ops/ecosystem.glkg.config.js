@@ -32,5 +32,7 @@ module.exports = {
     mk("history", 900, 50),
     mk("recompute", 1800, 55),
     mk("quality", 3600, 60),
+    // 자기 개선: 매시 깨어나 하루 1회만 실행(그날 스냅샷이 있으면 건너뜀). 안전 수정만 PR, 테스트 통과 시 병합
+    { ...mk("improve", 3600, 70), env: { PYTHONUNBUFFERED: "1", GLKG_IMPROVE_PR: "1" } },
   ],
 };
