@@ -179,6 +179,11 @@ def promote_book(conn, grp, sid: str, url: str, doc_id: str, now: str, pol, stat
     if not title or re.fullmatch(r"Q\d+", title):
         return None
     authors = _vals(grp, "author")
+    if not authors:     # 저자 → 작품 목록: 이름은 문서에 없고, 출처가 준 저자 키로 이미 알고 있는 저자만 연결한다
+        for k in _vals(grp, "ol_author_key"):
+            r = conn.execute("SELECT a.canonical_name FROM external_id e JOIN author a ON a.author_id=e.entity_id WHERE e.scheme='openlibrary_author' AND e.value=?", (k,)).fetchone()
+            if r:
+                authors.append(r[0])
     isbns = _vals(grp, "isbn")
     work_id, how = find_work(conn, title, authors, isbns)
     cand_id = stable_id("cand", norm(title), norm(authors[0]) if authors else "")
@@ -220,6 +225,10 @@ def promote_book(conn, grp, sid: str, url: str, doc_id: str, now: str, pol, stat
             add_work_claim(conn, work_id, pred, v, sid, url, ev(f), now, pol)
     for i in isbns[:4]:
         add_edition(conn, work_id, i, sid, url, ev("isbn"), now, pol)
+    if isbns:
+        for f, pred in (("ed_pub_year", "pub_year"), ("ed_publisher", "publisher")):
+            for v in _vals(grp, f)[:1]:
+                add_edition_fact(conn, stable_id("ed", work_id, isbns[0]), pred, v, sid, url, ev(f), now, pol)
     return work_id
 
 

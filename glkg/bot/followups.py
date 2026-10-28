@@ -44,12 +44,12 @@ def after_collect(conn, reg: Registry, budget: Budget, job: Job, res: FetchResul
         f.setdefault(r["field"], []).append(r["value"])
     cls = job.cls if job.cls != "refresh" else "discovery"
 
-    if kind == "ol_subject":
+    if kind in ("ol_subject", "ol_author_works"):
         # 페이지네이션(연도·장르당 최대 150건) + 각 작품의 판본 질의(작품→ISBN/판본)
         m = re.search(r"offset=(\d+)", job.url)
         off = int(m.group(1)) if m else 0
         total = int((f.get("total_in_subject") or ["0"])[0] or 0)
-        if off + 50 < min(total, 150) and len(f.get("ol_work_key", [])) + int((f.get("skipped_non_korean_title") or ["0"])[0]) >= 1:
+        if kind == "ol_subject" and off + 50 < min(total, 150) and len(f.get("ol_work_key", [])) + int((f.get("skipped_non_korean_title") or ["0"])[0]) >= 1:
             nxt = re.sub(r"offset=\d+", f"offset={off + 50}", job.url)
             if Q.enqueue_query(conn, budget, "ol_subject", nxt, "page " + nxt[-40:], cls, 45, origin=f"page:{job.key}"):
                 out["queries"] += 1

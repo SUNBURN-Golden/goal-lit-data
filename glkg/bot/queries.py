@@ -10,7 +10,7 @@ OL = "https://openlibrary.org"
 OA = "https://api.openalex.org"
 CR = "https://api.crossref.org"
 OA_SELECT = "id,display_name,publication_year,doi,language,type,authorships,primary_location,best_oa_location,referenced_works,cited_by_count,keywords"
-CR_SELECT = "DOI,title,author,issued,publisher,type,reference"
+CR_SELECT = "DOI,title,author,issued,publisher,type,reference,ISBN"
 
 # 장르(Open Library 주제 슬러그) · 비평 키워드. 새 장르·키워드는 여기 한 줄로 늘린다.
 SUBJECTS = {"korean_fiction": "소설", "korean_short_stories": "단편소설", "korean_poetry": "시"}
@@ -76,3 +76,12 @@ def enqueue_url(conn, budget, url: str, cls: str, depth: int = 0, priority: int 
         "INSERT OR IGNORE INTO crawl_frontier(url,domain,origin,depth,priority,budget_class,state,created_at,work_hint) VALUES(?,?,?,?,?,?,?,?,?)",
         (canonicalize(url), host_of(url), origin, depth, priority, cls, "queued", now_iso(), work_hint))
     return bool(cur.rowcount)
+
+
+def cr_book_url(title: str, author: str = "") -> str:
+    """빈칸 역검색: 도서(type:book 등) 제목+저자 → 출판사·연도·ISBN."""
+    return f"{CR}/works?" + up.urlencode({"query.bibliographic": f"{title} {author}".strip(), "filter": "type:book,type:monograph,type:edited-book", "rows": 10, "select": CR_SELECT})
+
+
+def ol_author_works_url(author_key: str, limit: int = 50) -> str:
+    return f"{OL}{author_key}/works.json?limit={limit}"
