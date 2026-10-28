@@ -15,6 +15,26 @@
    "until": "2026-11-04T11:07:52+09:00",
    "reason": "7일 4/4 실패(failed_robots,failed_network)",
    "added": "2026-10-28"
+  },
+  "ci.nii.ac.jp": {
+   "until": "2026-11-05T03:09:05+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-10-29"
+  },
+  "repository.kihasa.re.kr": {
+   "until": "2026-11-05T03:09:05+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-10-29"
+  },
+  "www.koreascience.or.kr": {
+   "until": "2026-11-05T03:09:05+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-10-29"
+  },
+  "www.ndsl.kr": {
+   "until": "2026-11-05T03:09:05+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-10-29"
   }
  }
 }
