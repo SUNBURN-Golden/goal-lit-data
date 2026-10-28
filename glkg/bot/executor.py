@@ -1,6 +1,7 @@
 """수집 실행기. 우선순위: API/피드 → HTML → (동적 페이지에 한해) 브라우저 렌더 → PDF/이미지.
 브라우저는 '자바스크립트로만 그려지는 빈 페이지'에서만 쓰고, 401/403/로그인/robots 차단은 절대 우회하지 않는다.
 저장: 내용 해시·수집 시각·추출기 버전. 로그인 페이지와 빈 본문은 실패로 기록한다."""
+import re
 import json
 import time
 from dataclasses import dataclass
@@ -77,6 +78,8 @@ class FetchExecutor:
         self.reg = registry or Registry()
         self.transport = transport or H.RequestsTransport()
         self.clock = clock or H.DomainClock()
+        if getattr(self.clock, "before_wait", None) is None:
+            self.clock.before_wait = self.conn.commit   # 대기·네트워크 중에는 쓰기 잠금을 놓는다(데몬 13개가 한 DB를 쓴다)
         self.budget = budget or Budget(conn)
         self.raw_dir = Path(raw_dir or RAW_DIR)
         self.renderer = renderer  # 선택: 동적 페이지용. 없으면 'needs_browser' 실패로 기록
@@ -110,6 +113,10 @@ class FetchExecutor:
         except H.BudgetGate:
             raise BudgetExhausted(budget_class)
         if not ok:
+            if why.startswith("robots_unreadable") or re.fullmatch(r"robots_status_5\d\d", why):
+                # robots.txt 를 못 읽은 것은 '차단'이 아니라 일시 장애: 수집은 하지 않되 영구 제외하지 않고 백오프로 다시 시도한다
+                self._log(url, "failed_network", why, cls=budget_class)
+                return FetchResult("failed_network", why, registry_key=pol["registry_key"])
             self._log(url, "failed_robots", why, cls=budget_class)
             return FetchResult("failed_robots", why, registry_key=pol["registry_key"])
         if not self.budget.take(budget_class):

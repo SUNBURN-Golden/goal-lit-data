@@ -142,3 +142,21 @@ def test_author_expansion_finds_other_works_by_known_author_key(env):
     assert titles == {"가상의 바다", "가상의 하늘"}                          # 영문 제목은 제외, 저자는 출처 키로 연결
     wa = kg.execute("SELECT count(*) FROM work_author wa JOIN work w ON w.work_id=wa.work_id WHERE w.canonical_title='가상의 하늘' AND wa.role='author'").fetchone()[0]
     assert wa == 1
+
+
+def test_same_title_without_author_match_is_not_merged_but_reviewed(env):
+    kg, reg, tr, ex, tmp = env
+    tr.routes["https://api.crossref.org/works"] = (200, "application/json", CROSSREF_BOOK)
+    tr.routes["https://api.openalex.org/works"] = (200, "application/json", json.dumps({"results": []}))
+    # 저자를 모르는 기존 작품(수집함 이관분과 같은 모양)
+    now = "2026-10-27T00:00:00+09:00"
+    kg.execute("INSERT INTO work(work_id,slug,canonical_title,kind,created_at) VALUES('wk_legacy','legacy','가상의 바다','',?)", (now,))
+    kg.commit()
+    gaps(kg, tmp)
+    harvest(kg, reg, ex, tmp)
+    assert kg.execute("SELECT count(*) FROM work").fetchone()[0] == 1                      # 새 작품도 만들지 않고 합치지도 않음
+    assert kg.execute("SELECT count(*) FROM edition WHERE work_id='wk_legacy'").fetchone()[0] == 0
+    assert kg.execute("SELECT count(*) FROM review_queue WHERE kind='title_match' AND ref_id='wk_legacy'").fetchone()[0] == 1
+    gaps(kg, tmp)
+    st, detail = gstate(kg, "wk_legacy")["author"]
+    assert st == "not_in_source" and "동명 후보 1건" in detail

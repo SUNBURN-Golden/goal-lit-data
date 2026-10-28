@@ -1,5 +1,6 @@
 """수집 예산: 재수집(refresh)·탐색(discovery)·보충(backfill)을 따로 센다. 합계는 하루 요청 200건(기존 상한) 이하.
 daily_usage 에 stage='bot:<class>', metric='requests' 로 기록한다(재시작해도 유지)."""
+import sqlite3
 from typing import Dict
 
 from .. import config
@@ -25,9 +26,25 @@ class Budget:
     def used(self, cls: str) -> int:
         return self._used("bot:" + cls)
 
+    def legacy_used(self) -> int:
+        """기존 수집기(goallit) 오늘 본문 수집 수: 수집함 DB 의 일일 카운터(읽기 전용)와 KG 'fetch' 단계 사용량 중 큰 값. 둘은 같은 수집을 세므로 합치지 않는다."""
+        n = 0
+        try:
+            p = config.INBOX_DB_PATH
+            if p.exists():
+                c = sqlite3.connect(f"file:{p}?mode=ro", uri=True, timeout=5)
+                try:
+                    r = c.execute("SELECT fetched_count FROM daily_counters WHERE date_kst=?", (today(),)).fetchone()
+                    n = int(r[0]) if r else 0
+                finally:
+                    c.close()
+        except Exception:
+            n = 0
+        return max(n, self._used("fetch"))
+
     def total_used(self) -> int:
-        """봇 3종 + 기존 수집기('fetch' 단계) 요청 합계."""
-        return sum(self.used(c) for c in CLASSES) + self._used("fetch")
+        """봇 3종 + 기존 수집기 요청 합계(하루 200건 상한을 같이 쓴다)."""
+        return sum(self.used(c) for c in CLASSES) + self.legacy_used()
 
     def available(self, cls: str) -> int:
         return max(0, min(self.split[cls] - self.used(cls), self.fetch_cap - self.total_used()))
@@ -53,5 +70,5 @@ class Budget:
             "ON CONFLICT(day,stage,metric) DO UPDATE SET used=used+excluded.used, cap=excluded.cap", (today(), stage, metric, n, cap))
 
     def snapshot(self) -> Dict[str, object]:
-        return {"day": today(), "requests": {c: f"{self.used(c)}/{self.split[c]}" for c in CLASSES}, "legacy_fetch": self._used("fetch"),
+        return {"day": today(), "requests": {c: f"{self.used(c)}/{self.split[c]}" for c in CLASSES}, "legacy_fetch": self.legacy_used(),
                 "total": f"{self.total_used()}/{self.fetch_cap}", "discovered": f"{self._used('bot:discovery', 'discovered')}/{self.discovered_cap}"}

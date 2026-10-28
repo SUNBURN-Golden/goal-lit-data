@@ -70,13 +70,16 @@ def host_of(url: str) -> str:
 class DomainClock:
     """도메인별 동시 1건 + 최소 간격. 프로세스가 달라도 파일 락으로 지킨다."""
 
-    def __init__(self, lock_dir: Optional[Path] = None, interval: Optional[float] = None, sleep=time.sleep, now=time.time):
+    def __init__(self, lock_dir: Optional[Path] = None, interval: Optional[float] = None, sleep=time.sleep, now=time.time, before_wait=None):
+        self.before_wait = before_wait   # 간격 대기·네트워크 직전에 호출: DB 쓰기 잠금을 쥔 채 잠들지 않도록 커밋한다
         self.dir = Path(lock_dir or config.LOCK_DIR) / "domains"
         self.interval = config.MIN_DOMAIN_INTERVAL_SEC if interval is None else interval
         self.sleep, self.now = sleep, now
         self.per_domain: Dict[str, float] = {}   # robots Crawl-delay 로 늘어난 간격
 
     def acquire(self, domain: str):
+        if self.before_wait:
+            self.before_wait()
         self.dir.mkdir(parents=True, exist_ok=True)
         f = open(self.dir / (re.sub(r"[^a-z0-9.-]", "_", domain) + ".lock"), "a+")
         fcntl.flock(f, fcntl.LOCK_EX)
@@ -168,6 +171,9 @@ class RobotsGate:
             entry = (self.now(), rp, "ok")
         else:
             entry = (self.now(), None, f"robots_status_{r.status}")  # 401/403/5xx: 안전하게 수집 안 함
+        if entry[1] is None and (entry[2].startswith("robots_unreadable") or re.fullmatch(r"robots_status_5\d\d", entry[2])):
+            # 일시 장애(타임아웃·SSL·5xx): 수집은 안 하되 24시간 동안 '막힘'으로 굳히지 않고 10분 뒤 다시 확인한다
+            entry = (self.now() - self.ttl + min(self.ttl, 600), entry[1], entry[2])
         self.cache[host] = entry
         return entry
 

@@ -201,3 +201,62 @@ def test_same_body_at_two_urls_makes_two_documents_not_a_crash(env):
     a = ex.fetch(Q.ol_subject_url("korean_fiction", 2001), "discovery")
     b = ex.fetch(Q.ol_subject_url("korean_fiction", 2002), "discovery")
     assert a.outcome == b.outcome == "ok" and a.doc_id != b.doc_id
+
+
+def test_budget_counts_legacy_collector_usage_from_inbox_counter(env, tmp_path, monkeypatch):
+    import sqlite3
+    from glkg.timeutil import today
+    kg, reg, tr, mk, tmp = env
+    inbox = tmp_path / "inbox.db"
+    c = sqlite3.connect(inbox)
+    c.execute("CREATE TABLE daily_counters(date_kst TEXT, brand TEXT, discovered_count INT, fetched_count INT)")
+    c.execute("INSERT INTO daily_counters VALUES(?,?,?,?)", (today(), "goal-lit", 0, 71))
+    c.commit(); c.close()
+    monkeypatch.setattr(config, "INBOX_DB_PATH", inbox)
+    b = Budget(kg)
+    assert b.legacy_used() == 71 and b.total_used() == 71
+    assert b.available("backfill") == 120                      # 클래스 한도 안
+    b.take("backfill", 100)
+    assert b.available("backfill") == 20 and b.available("discovery") == 200 - 71 - 100     # 클래스 한도 안이어도 하루 합계 200 이 먼저 막는다
+
+
+def test_db_write_lock_is_not_held_during_network(env):
+    """데몬 13개가 한 DB를 쓰므로, 요청이 나가는 동안 다른 연결이 쓸 수 있어야 한다."""
+    import sqlite3
+    kg, reg, tr, mk, tmp = env
+    seen = {}
+
+    def during(url):
+        other = sqlite3.connect(str(tmp / "kg.db"), timeout=0.2)
+        try:
+            other.execute("BEGIN IMMEDIATE")
+            other.execute("INSERT INTO _migrations(version,name,applied_at) VALUES(9999,'probe','x')")
+            other.rollback()
+            seen["free"] = True
+        except sqlite3.OperationalError as e:
+            seen["free"] = False
+            seen["err"] = str(e)
+        finally:
+            other.close()
+        return (200, "text/html", PAPER_HTML, url)
+    tr.routes["https://journal.test/p"] = during
+    from glkg.bot.collect import collect
+    ex = mk()
+    collect(kg, ex, "https://journal.test/p", "discovery", trial=True)
+    assert seen.get("free") is True, seen
+
+
+def test_unreadable_robots_is_transient_not_a_permanent_block(env):
+    kg, reg, tr, mk, tmp = env
+    tr.routes["https://journal.test/robots.txt"] = ConnectionError("ssl")
+    tr.routes["https://journal.test/p"] = (200, "text/html", PAPER_HTML)
+    ex = mk()
+    res = ex.fetch("https://journal.test/p", "discovery", trial=True)
+    assert res.outcome == "failed_network" and res.detail.startswith("robots_unreadable")   # 수집은 하지 않지만
+    assert "https://journal.test/p" not in tr.calls                                            # 본문 요청은 나가지 않았고
+    from glkg.bot.jobs import PERMANENT
+    assert res.outcome not in PERMANENT                                                        # 영구 제외도 아니다(백오프 재시도 대상)
+    # 평가기: 즉시 blocked 로 굳히지 않고 3회까지 재시도
+    kg.execute("INSERT INTO candidate_source(domain,state,first_seen_via,sample_url,first_seen_at) VALUES('journal.test','new','t','https://journal.test/p','x')")
+    row = kg.execute("SELECT * FROM candidate_source WHERE domain='journal.test'").fetchone()
+    assert EV.evaluate_outcome(kg, row, res) == "new"
