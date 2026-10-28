@@ -99,15 +99,15 @@ def sync_to_db(conn, reg: Optional[Registry] = None) -> int:
     now = now_iso()
     for s in reg.sources:
         conn.execute(
-            """INSERT INTO source_registry(registry_key,name,kind,support_level,domains_json,fields_json,usage_basis,refresh_hours,retention_days,unsupported_scope,notes,loaded_at)
-               VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+            """INSERT INTO source_registry(registry_key,name,kind,support_level,domains_json,fields_json,usage_basis,refresh_hours,retention_days,unsupported_scope,notes,loaded_at,rights_note)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
                ON CONFLICT(registry_key) DO UPDATE SET name=excluded.name, kind=excluded.kind, support_level=excluded.support_level,
                  domains_json=excluded.domains_json, fields_json=excluded.fields_json, usage_basis=excluded.usage_basis,
                  refresh_hours=excluded.refresh_hours, retention_days=excluded.retention_days, unsupported_scope=excluded.unsupported_scope,
-                 notes=excluded.notes, loaded_at=excluded.loaded_at""",
+                 notes=excluded.notes, loaded_at=excluded.loaded_at, rights_note=excluded.rights_note""",
             (s["key"], s["name"], s["kind"], s["support_level"], json.dumps(s.get("domains", []), ensure_ascii=False),
              json.dumps(s.get("collectable_fields", []), ensure_ascii=False), s["usage_basis"], s.get("refresh_hours"),
-             s.get("retention_days"), s.get("unsupported_scope", ""), s.get("access_method", ""), now),
+             s.get("retention_days"), s.get("unsupported_scope", ""), s.get("access_method", ""), now, s.get("rights_note", "")),
         )
     conn.commit()
     return len(reg.sources)

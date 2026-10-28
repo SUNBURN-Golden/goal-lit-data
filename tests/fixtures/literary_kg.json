@@ -1,0 +1,8 @@
+{"note": "비식별 합성 픽스처: 가상 작품·가상 매체·가상 평론가. 실제 인물/기사 아님.",
+ "source": {"source_id": "src_fx1", "url": "https://ok-news.test/kg/1", "domain": "ok-news.test", "outlet": "가상일보"},
+ "source2": {"source_id": "src_fx2", "url": "https://ok-journal.test/kg/2", "domain": "ok-journal.test", "outlet": "가상학회지"},
+ "interpretations": [
+  {"interp_id": "in_fx_a", "kind": "critique", "attributed_to_name": "평론가 갑", "summary": "작품이 국가폭력의 기억을 애도의 형식으로 다룬다고 봄", "status": "source_claim", "src": "src_fx1", "loc": "문단 3", "quote": "애도의 형식"},
+  {"interp_id": "in_fx_b", "kind": "counter", "attributed_to_name": "평론가 을", "summary": "애도보다 가족 서사가 중심이라는 반론", "status": "source_claim", "src": "src_fx1", "loc": "문단 7", "quote": "가족 서사"},
+  {"interp_id": "in_fx_c", "kind": "interpretation", "attributed_to_name": "", "summary": "번역 논쟁이 있었다는 미확인 단서", "status": "unverified", "src": "src_fx2", "loc": "초록 1", "quote": ""}
+ ]}

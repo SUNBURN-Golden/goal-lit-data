@@ -12,10 +12,11 @@ from .seek import SeekStage
 from .assess import AssessStage
 from .harvest import HarvestStage
 from .gaps import GapStage
+from .themes import ThemeStage
 
-ORDER = ["discover", "seek", "harvest", "assess", "gaps", "fetch", "parse", "detect", "extract", "resolve", "verify", "history", "recompute", "quality"]
+ORDER = ["discover", "seek", "harvest", "assess", "gaps", "fetch", "parse", "detect", "extract", "themes", "resolve", "verify", "history", "recompute", "quality"]
 STAGES = {
     "discover": DiscoverStage, "fetch": FetchStage, "detect": DetectStage, "extract": ExtractStage, "resolve": ResolveStage,
     "verify": VerifyStage, "history": HistoryStage, "recompute": RecomputeStage, "quality": QualityStage, "parse": ParseStage,
-    "seek": SeekStage, "assess": AssessStage, "harvest": HarvestStage, "gaps": GapStage,
+    "seek": SeekStage, "assess": AssessStage, "harvest": HarvestStage, "gaps": GapStage, "themes": ThemeStage,
 }
