@@ -35,6 +35,21 @@
    "until": "2026-11-05T03:09:05+09:00",
    "reason": "7일 3/3 실패(failed_network)",
    "added": "2026-10-29"
+  },
+  "hdl.handle.net": {
+   "until": "2026-11-06T03:57:05+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-10-30"
+  },
+  "journals.dvfu.ru": {
+   "until": "2026-11-06T03:57:05+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-10-30"
+  },
+  "repository.dl.itc.u-tokyo.ac.jp": {
+   "until": "2026-11-06T03:57:05+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-10-30"
   }
  }
 }
