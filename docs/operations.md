@@ -24,6 +24,8 @@ python3 ops/proof_metrics.py [--save f | --diff f]                          # �
 ## 예산 (한 곳에서 강제)
 하루 요청 200건 = 능동 봇 backfill 120 + discovery 60 + refresh 20, **기존 수집기와 합쳐서** 200건을 넘지 않는다(수집함 DB `daily_counters.fetched_count` 를 읽기 전용으로 합산). 기존 수집기(`glkg-fetch`)는 그중 40건까지만 쓴다(`config.LEGACY_FETCH_SHARE`) — 레거시가 예산을 다 먹어 봇이 굶는 일을 막기 위해서다. 후보 생성 500/일. robots.txt 요청도 센다. 하루가 지나면(KST 0시) 자동으로 새 예산이 열린다.
 
+**verify 단계 예외 (준태님 11/5 지시):** 온톨로지 검증(`glkg-verify`)은 일일 rows 예산을 두지 않는다. `VerifyStage.budget_metric = None`, `STAGE_DAILY_CAPS["verify"] = {}`. 과거 `daily_usage` 의 `verify/rows` 행(예: 50000/50000)은 남아 있어도 차단하지 않는다 — verify 는 더 이상 그 지표를 소모/조회하지 않으므로 DB 마이그레이션이나 사용량 초기화가 필요 없다. fetch·assess·discovery·bot·extract 등 **다른 단계의 한도와 robots/도메인 차단 규칙은 그대로**다. 판정 규칙(`rules.evaluate`)도 완화하지 않았다. 장기 실행 프로세스는 코드를 다시 import 하지 않으므로, 승인된 코드를 `/workspace/gl-data/run` 에 반영한 뒤 `glkg-verify` 프로세스를 갱신해야 적용된다.
+
 ## 동시 사용 (DB 잠금)
 데몬 13개가 한 SQLite(WAL)를 쓴다. 요청 간격 대기·네트워크 호출 **직전에 커밋**해 쓰기 잠금을 놓는다(`DomainClock.before_wait`). 저장·파싱·작업 상태·후속 질의는 요청 뒤 한 트랜잭션으로 커밋되므로 중간에 죽으면 그 작업만 롤백된다. (이 수정 전에는 첫 기동에서 `database is locked` 가 났다 — 테스트 `test_db_write_lock_is_not_held_during_network`.)
 

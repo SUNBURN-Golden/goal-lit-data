@@ -29,7 +29,7 @@ STAGE_DAILY_CAPS = {
     "detect": {"requests": 200},
     "extract": {"rows": 5000},
     "resolve": {"rows": 5000},
-    "verify": {"rows": 50000},
+    "verify": {},  # 검증 단계는 일일 rows 예산 없음(준태님 11/5 지시). fetch/assess/discovery 등 다른 한도는 유지
     "history": {"rows": 5000},
     "recompute": {"rows": 50000},
     "quality": {"rows": 50000},

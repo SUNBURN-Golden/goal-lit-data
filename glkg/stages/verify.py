@@ -12,7 +12,7 @@ from .common import CLAIM_TABLES, TABLE_PK
 class VerifyStage(Stage):
     name = "verify"
     batch_size = 100
-    budget_metric = "rows"
+    budget_metric = None  # 준태님 11/5 지시: 검증은 일일 rows 예산 없음. 다른 단계의 수집 한도는 그대로 둔다.
 
     def __init__(self, inbox_path=None):
         self.inbox_path = inbox_path
