@@ -50,6 +50,91 @@
    "until": "2026-11-06T03:57:05+09:00",
    "reason": "7일 3/3 실패(failed_network)",
    "added": "2026-10-30"
+  },
+  "accesson.kr": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "bvbr.bib-bvb.de": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "eprints.uny.ac.id": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "fwu.repo.nii.ac.jp": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "katalog.pustaka.unand.ac.id": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "lib.ui.ac.id": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "library.um.ac.id": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "repositori.uin-alauddin.ac.id": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "repository.uinsu.ac.id": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "repository.um-palembang.ac.id": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "repository.upi.edu": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "s-space.snu.ac.kr": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "www.auric.or.kr": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "www.jdaos.org": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "www.jicce.org": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
+  },
+  "www.krm.or.kr": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_http)",
+   "added": "2026-11-13"
+  },
+  "www.medhist.or.kr": {
+   "until": "2026-11-20T04:02:37+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-13"
   }
  }
 }
