@@ -135,6 +135,16 @@
    "until": "2026-11-20T04:02:37+09:00",
    "reason": "7일 3/3 실패(failed_network)",
    "added": "2026-11-13"
+  },
+  "ejournal.undip.ac.id": {
+   "until": "2026-11-26T01:21:48+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-19"
+  },
+  "eprints.ums.ac.id": {
+   "until": "2026-11-26T01:21:48+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-19"
   }
  }
 }
