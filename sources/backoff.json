@@ -145,6 +145,331 @@
    "until": "2026-11-26T01:21:48+09:00",
    "reason": "7일 3/3 실패(failed_network)",
    "added": "2026-11-19"
+  },
+  "music.apple.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 122/131 실패(failed_unsupported_type)",
+   "added": "2026-11-28"
+  },
+  "image.donga.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 54/56 실패(failed_unsupported_type)",
+   "added": "2026-11-28"
+  },
+  "www.issueinsight.co.kr": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 6/6 실패(failed_login,failed_network)",
+   "added": "2026-11-28"
+  },
+  "arting.art": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "association.magazine.or.kr": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "breakingthenews.net": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network,failed_empty)",
+   "added": "2026-11-28"
+  },
+  "cleantechnica.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "deposit.dnb.de": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_http)",
+   "added": "2026-11-28"
+  },
+  "digital-nomad-survival-diary.tistory.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "dufrayok.tw": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "entgam.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "gosparkpoint.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "jamesjoyce.ie": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "journal.accs.or.kr": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "mark.inicis.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "mining.com.au": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "mongolia.gogo.mn": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "moonji.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "news.samsung.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "one-story.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "petapixel.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "play.anghami.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network,failed_http)",
+   "added": "2026-11-28"
+  },
+  "polk.uwosh.edu": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "publicationconsultants.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "raizel01.blog.fc2.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network,failed_login)",
+   "added": "2026-11-28"
+  },
+  "repositorio.ufpe.br": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "repository.hanyang.ac.kr": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "sbsstar.net": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "scholarworks.bwise.kr": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "service.weibo.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "shop.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_rate_limit)",
+   "added": "2026-11-28"
+  },
+  "social-plugins.line.me": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "starlust.org": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "trace.tennessee.edu": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_http)",
+   "added": "2026-11-28"
+  },
+  "uiux.egovframe.go.kr": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "wa.me": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "webzine.kps.or.kr": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network,failed_unsupported_type)",
+   "added": "2026-11-28"
+  },
+  "www.aplib.org": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.bevaristo.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.bozemandailychronicle.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_rate_limit,failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.changbi.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.connectedpapers.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.cp1897.com.hk": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.daesan.or.kr": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.designsociety.org": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network,failed_unsupported_type)",
+   "added": "2026-11-28"
+  },
+  "www.dhns.co.kr": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network,failed_login)",
+   "added": "2026-11-28"
+  },
+  "www.hanafn.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.insweek.co.kr": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.kdevelopedia.org": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_http,failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.korea.net": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.lg.co.kr": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_http)",
+   "added": "2026-11-28"
+  },
+  "www.manilatimes.net": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.mediaon.co.kr": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.paddyfield.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_http,failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.samnparkers.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.shopinhk.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.skhynix.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_http)",
+   "added": "2026-11-28"
+  },
+  "www.tmz.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.tvinsider.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.visitgreeley.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_http)",
+   "added": "2026-11-28"
+  },
+  "www.whio.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.wokv.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.wsbradio.com": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "www.yechong.or.kr": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
+  },
+  "zapzee.net": {
+   "until": "2026-12-05T01:10:25+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-28"
   }
  }
 }
