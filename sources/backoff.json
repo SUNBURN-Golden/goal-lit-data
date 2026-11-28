@@ -470,6 +470,16 @@
    "until": "2026-12-05T01:10:25+09:00",
    "reason": "7일 3/3 실패(failed_network)",
    "added": "2026-11-28"
+  },
+  "lib.seoul.go.kr": {
+   "until": "2026-12-06T03:25:14+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-29"
+  },
+  "periodicos.ufpa.br": {
+   "until": "2026-12-06T03:25:14+09:00",
+   "reason": "7일 3/3 실패(failed_network)",
+   "added": "2026-11-29"
   }
  }
 }
